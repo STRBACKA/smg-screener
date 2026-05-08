@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SMG Screener</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f0efe9;--surface:#fff;--surface2:#f7f7f5;--surface3:#eeede8;
+  --border:rgba(0,0,0,.09);--border2:rgba(0,0,0,.18);
+  --text:#1a1a1a;--muted:#666;--hint:#999;
+  --accent:#185fa5;--accent2:#378ADD;
+  --green:#0f6e56;--green-bg:#e1f5ee;
+  --amber:#854f0b;--amber-bg:#faeeda;
+  --red:#a32d2d;--red-bg:#fcebeb;
+  --info:#185fa5;--info-bg:#e6f1fb;
+  --r:6px;--rl:10px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1e1e1c;--surface:#242422;--surface2:#2a2a28;--surface3:#323230;
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.18);
+  --text:#f0ede8;--muted:#aaa;--hint:#555;
+  --accent:#85b7eb;--accent2:#60a5fa;
+  --green:#5dcaa5;--green-bg:#04342c;
+  --amber:#ef9f27;--amber-bg:#412402;
+  --red:#f09595;--red-bg:#501313;
+  --info:#85b7eb;--info-bg:#042c53;
+}}
+html,body{height:100%;overflow:hidden;}
+body{font-family:-apple-system,'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:13px;display:flex;flex-direction:column;}
+
+/* ══ TOOLBAR ══ */
+.toolbar{height:46px;min-height:46px;background:var(--surface);border-bottom:.5px solid var(--border2);display:flex;align-items:center;gap:8px;padding:0 14px;z-index:300;flex-shrink:0;}
+.tb-brand{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--accent);letter-spacing:.1em;white-space:nowrap;}
+.tb-views{display:flex;gap:2px;background:var(--bg);border:.5px solid var(--border2);border-radius:var(--rl);padding:2px;}
+.tv-btn{font-family:'Space Mono',monospace;font-size:10px;padding:4px 12px;border-radius:var(--r);border:none;background:none;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.tv-btn.on{background:var(--info-bg);color:var(--info);font-weight:700;}
+.tb-sep{width:1px;height:22px;background:var(--border2);flex-shrink:0;}
+.tb-input{font-size:12px;background:var(--surface2);border:.5px solid var(--border2);border-radius:var(--r);padding:4px 10px;color:var(--text);outline:none;width:140px;}
+.tb-input:focus{border-color:var(--accent);}
+.tb-btn{font-family:'Space Mono',monospace;font-size:10px;padding:4px 10px;border-radius:var(--r);border:.5px solid var(--border2);background:var(--surface2);color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .12s;}
+.tb-btn:hover{border-color:var(--accent);color:var(--accent);}
+.tb-btn.active{border-color:var(--accent);color:var(--accent);background:var(--info-bg);}
+
+/* ══ APP BODY ══ */
+.app-body{flex:1;display:flex;overflow:hidden;min-height:0;}
+
+/* ══ LEFT PANEL ══ */
+.left-panel{width:220px;min-width:220px;background:var(--surface);border-right:.5px solid var(--border2);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;}
+.lp-sect{padding:8px 11px;border-bottom:.5px solid var(--border);}
+.lp-tit{font-family:'Space Mono',monospace;font-size:9px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+.layer-item{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:var(--r);border:.5px solid transparent;cursor:pointer;transition:all .12s;margin-bottom:2px;}
+.layer-item:hover{background:var(--surface2);}
+.layer-item.on{background:var(--surface2);border-color:var(--border2);}
+.layer-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.layer-lbl{flex:1;font-size:11px;font-weight:500;}
+.layer-cnt{font-family:'Space Mono',monospace;font-size:9px;color:var(--hint);}
+.firms-hdr{display:flex;align-items:center;justify-content:space-between;padding:7px 11px 3px;}
+.firms-hdr-txt{font-family:'Space Mono',monospace;font-size:9px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;}
+.dir-legend{display:none;gap:8px;padding:3px 11px 5px;border-bottom:.5px solid var(--border);}
+.firms-list{flex:1;overflow-y:auto;scrollbar-width:thin;}
+.fi{display:flex;align-items:center;gap:5px;padding:5px 11px;cursor:pointer;border-bottom:.5px solid var(--border);transition:background .1s;}
+.fi:hover{background:var(--surface2);}
+.fi.sel{background:var(--info-bg);border-left:2px solid var(--accent);}
+.fi.hl{background:var(--info-bg);}
+.fi-t{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;min-width:42px;}
+.fi-n{font-size:10px;color:var(--muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fi-dir{font-size:12px;font-weight:700;flex-shrink:0;}
+.firms-empty{padding:16px 11px;font-size:11px;color:var(--muted);text-align:center;line-height:1.7;}
+
+/* ══ CENTER ══ */
+.center{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+
+/* MAP */
+.map-area{flex:0 0 55%;min-height:150px;position:relative;overflow:hidden;background:var(--bg);}
+.map-area canvas{display:block;}
+.map-tt{position:absolute;pointer-events:none;background:var(--surface);border:.5px solid var(--border2);border-radius:var(--r);padding:5px 9px;font-size:11px;opacity:0;transition:opacity .15s;max-width:220px;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.12);}
+.map-legend{position:absolute;bottom:8px;left:8px;background:var(--surface);border:.5px solid var(--border);border-radius:var(--rl);padding:7px 10px;box-shadow:0 2px 8px rgba(0,0,0,.08);}
+.ml-item{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted);margin-bottom:2px;cursor:pointer;user-select:none;}
+.ml-item:last-child{margin-bottom:0;}
+.ml-dot{width:6px;height:6px;border-radius:50%;}
+.map-stats{position:absolute;top:8px;right:8px;display:flex;gap:4px;}
+.ms{font-family:'Space Mono',monospace;font-size:9px;background:var(--surface);border:.5px solid var(--border);border-radius:var(--r);padding:2px 7px;color:var(--muted);}
+
+/* BOTTOM */
+.bottom-area{flex:1;display:flex;overflow:hidden;min-height:0;border-top:.5px solid var(--border2);}
+.detail-area{flex:0 0 33%;overflow-y:auto;padding:12px 14px;border-right:.5px solid var(--border2);scrollbar-width:thin;}
+.det-empty{display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:6px;color:var(--muted);}
+.screening-area{flex:0 0 67%;overflow-y:auto;padding:12px 14px;scrollbar-width:thin;}
+.scr-empty{display:flex;align-items:center;justify-content:center;height:100%;flex-direction:column;gap:6px;color:var(--muted);text-align:center;}
+
+/* ══ WATCHLIST VIEW ══ */
+#wl-view{flex:1;overflow-y:auto;padding:14px 16px;background:var(--bg);}
+.wl-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:7px;margin-bottom:12px;}
+.wl-stat{background:var(--surface);border:.5px solid var(--border);border-radius:var(--r);padding:8px 10px;}
+.wl-stat-l{font-size:10px;color:var(--muted);margin-bottom:2px;}
+.wl-stat-v{font-size:17px;font-weight:500;}
+.wl-filters{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+.wl-pill{font-size:10px;padding:3px 8px;border-radius:20px;border:.5px solid var(--border2);cursor:pointer;color:var(--muted);background:transparent;white-space:nowrap;transition:all .12s;}
+.wl-pill:hover{border-color:var(--accent);color:var(--accent);}
+.wl-pill.on{background:var(--info-bg);color:var(--info);border-color:var(--info);}
+.wl-tbl-wrap{background:var(--surface);border:.5px solid var(--border);border-radius:var(--rl);overflow:hidden;overflow-x:auto;}
+.wl-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:640px;}
+.wl-tbl thead tr{background:var(--surface2);}
+/* Drag & drop sloupce */
+.wl-tbl th.draggable{cursor:grab;user-select:none;}
+.wl-tbl th.draggable:active{cursor:grabbing;}
+.wl-tbl th.drag-over{border-left:2px solid var(--accent);}
+.wl-tbl th.dragging{opacity:.4;}
+
+.wl-tbl th{font-size:10px;font-weight:500;color:var(--muted);padding:7px 9px;text-align:left;cursor:pointer;white-space:nowrap;border-bottom:.5px solid var(--border2);}
+.wl-tbl th:hover{color:var(--text);}
+.wl-tbl td{padding:5px 9px;border-bottom:.5px solid var(--border);vertical-align:middle;}
+.wl-tbl tr:last-child td{border-bottom:none;}
+.wl-tbl tr:hover td{background:var(--surface2);}
+.wl-tbl tr.starred td{background:rgba(239,159,39,.04);}
+.wl-tbl tr.editing td{background:var(--info-bg)!important;}
+.wl-tbl tr.row-selected td{background:rgba(239,159,39,.06);}
+.wl-tbl tr.row-selected td:first-child{border-left:2.5px solid var(--amber);}
+.wl-tbl tr.row-selected td:last-child{border-right:2.5px solid var(--amber);}
+.wl-tbl tr.row-selected td{border-top:.5px solid rgba(239,159,39,.35);border-bottom:.5px solid rgba(239,159,39,.35);}
+.wstar{background:none;border:none;cursor:pointer;font-size:12px;opacity:.2;padding:0;color:var(--amber);}
+.wstar:hover,.wstar.on{opacity:1;}
+.wtl{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--accent);text-decoration:none;}
+.wtl:hover{text-decoration:underline;}
+.wbadge{font-size:10px;padding:2px 7px;border-radius:20px;white-space:nowrap;display:inline-block;}
+.wmap-btn,.waction-btn{font-size:9px;padding:2px 6px;border-radius:var(--r);border:.5px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .12s;}
+.wmap-btn:hover{background:var(--info-bg);color:var(--info);border-color:var(--info);}
+.wmap-icon-btn{background:var(--info-bg);border:.5px solid var(--info);border-radius:var(--r);cursor:pointer;font-size:12px;padding:2px 5px;line-height:1;transition:box-shadow .15s,transform .15s;}
+.wmap-icon-btn:hover{box-shadow:0 0 0 2.5px var(--accent);transform:scale(1.1);background:var(--info-bg);}
+.waction-btn:hover{background:var(--surface2);color:var(--text);}
+.waction-btn.del:hover{background:var(--red-bg);color:var(--red);border-color:var(--red);}
+.wei{font-size:10px;padding:2px 5px;border-radius:var(--r);border:.5px solid var(--border2);background:var(--surface2);color:var(--text);}
+.wei:focus{outline:none;border-color:var(--accent);}
+.wei-xs{width:55px;}
+.wei-sm{width:85px;}
+.wei-md{width:110px;}
+.wei-lg{width:145px;}
+.wei-xl{width:185px;}
+
+/* ══ DETAIL ══ */
+.det-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;}
+.det-tick{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;}
+.det-name{font-size:12px;color:var(--muted);margin-top:1px;}
+.det-badge{font-size:10px;padding:2px 7px;border-radius:20px;margin-top:3px;display:inline-block;}
+.det-price{font-family:'Space Mono',monospace;font-size:18px;font-weight:700;text-align:right;}
+.det-chg{font-size:11px;text-align:right;}
+.det-tabs{display:flex;gap:3px;margin-bottom:8px;flex-wrap:wrap;}
+.det-tab{font-family:'Space Mono',monospace;font-size:9px;padding:3px 8px;border-radius:var(--r);border:.5px solid var(--border2);background:none;color:var(--muted);cursor:pointer;transition:all .12s;}
+.det-tab.on{background:var(--info-bg);border-color:var(--info);color:var(--info);font-weight:700;}
+.det-sec{font-family:'Space Mono',monospace;font-size:9px;color:var(--hint);text-transform:uppercase;letter-spacing:.08em;margin:10px 0 5px;border-bottom:.5px solid var(--border);padding-bottom:3px;}
+.det-fcf-wrap{position:relative;height:145px;}
+
+/* ══ SCREENING ══ */
+
+/* 5-sloupcový screening */
+.scr-cols{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;min-height:0;}
+.scr-col{background:var(--surface2);border:.5px solid var(--border);border-radius:var(--r);padding:8px 9px;min-width:0;overflow:hidden;}
+.scr-col-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;padding-bottom:5px;border-bottom:.5px solid var(--border2);}
+.scr-col-title{font-family:'Space Mono',monospace;font-size:9px;color:var(--hint);text-transform:uppercase;letter-spacing:.06em;}
+.scr-col-score{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;padding:1px 6px;border-radius:20px;}
+.scr-item{display:flex;justify-content:space-between;align-items:flex-start;padding:4px 0;border-bottom:.5px solid var(--border);gap:4px;}
+.scr-item:last-child{border-bottom:none;}
+.scr-item-lbl{font-size:10px;color:var(--muted);line-height:1.3;flex:1;}
+.scr-item-val{font-family:'Space Mono',monospace;font-size:10px;font-weight:500;text-align:right;white-space:nowrap;}
+.scr-item-note{font-size:9px;color:var(--hint);text-align:right;}
+.scr-edit-inline{margin-top:6px;padding-top:6px;border-top:.5px solid var(--border);}
+.scr-ei{font-size:10px;padding:3px 5px;border-radius:var(--r);border:.5px solid var(--border2);background:var(--surface);color:var(--text);width:100%;margin-bottom:3px;}
+.scr-ei:focus{outline:none;border-color:var(--accent);}
+.scr-save-btn{font-size:9px;padding:2px 8px;border-radius:var(--r);border:.5px solid var(--green);background:var(--green-bg);color:var(--green);cursor:pointer;width:100%;margin-top:2px;}
+
+.scr-hdr{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.scr-score{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0;}
+.scr-body{display:flex;flex-direction:column;gap:8px;}
+.scr-bod{background:var(--surface2);border-radius:var(--r);border:.5px solid var(--border);}
+.scr-bod-hdr{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;cursor:pointer;user-select:none;}
+.scr-bod-title{font-size:11px;font-weight:500;}
+.scr-bod-score{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
+.scr-bod-body{padding:0 10px 10px;display:none;}
+.scr-bod-body.open{display:block;}
+.scr-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:.5px solid var(--border);font-size:11px;}
+.scr-row:last-child{border-bottom:none;}
+.scr-lbl{color:var(--muted);}
+.scr-val{font-weight:500;font-family:'Space Mono',monospace;font-size:11px;}
+.scr-bar-wrap{height:4px;background:var(--border2);border-radius:2px;overflow:hidden;margin-top:2px;}
+.scr-bar{height:4px;border-radius:2px;transition:width .4s;}
+.fh-tag{font-size:9px;padding:1px 5px;border-radius:3px;background:var(--green-bg);color:var(--green);font-family:'Space Mono',monospace;}
+.man-tag{font-size:9px;padding:1px 5px;border-radius:3px;background:var(--amber-bg);color:var(--amber);font-family:'Space Mono',monospace;}
+.scr-edit-btn{font-size:9px;padding:2px 6px;border-radius:var(--r);border:.5px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;}
+.scr-edit-btn:hover{border-color:var(--accent);color:var(--accent);}
+.scr-edit-form{background:var(--surface);border:.5px solid var(--border2);border-radius:var(--r);padding:8px 10px;margin-top:6px;}
+.scr-ef-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:11px;}
+.scr-ef-lbl{color:var(--muted);width:130px;flex-shrink:0;}
+.scr-ef-inp{font-size:11px;padding:3px 6px;border-radius:var(--r);border:.5px solid var(--border2);background:var(--surface2);color:var(--text);flex:1;}
+.scr-ef-inp:focus{outline:none;border-color:var(--accent);}
+.mos-wrap{height:5px;background:var(--border2);border-radius:3px;overflow:hidden;margin:3px 0 6px;}
+.mos-fill{height:5px;border-radius:3px;transition:width .4s;}
+
+/* ══ MODAL ══ */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:16px;}
+.modal{background:var(--surface);border:.5px solid var(--border2);border-radius:var(--rl);padding:20px;max-width:480px;width:100%;box-shadow:0 16px 48px rgba(0,0,0,.2);}
+.modal h3{font-size:14px;font-weight:500;margin-bottom:4px;}
+.modal p{font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6;}
+.mfg{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px;}
+.mff{display:flex;flex-direction:column;gap:2px;}
+.mfl{font-size:9px;color:var(--muted);}
+.mfi{font-size:11px;padding:5px 7px;border-radius:var(--r);border:.5px solid var(--border2);background:var(--surface2);color:var(--text);width:100%;}
+.mfi:focus{outline:none;border-color:var(--accent);}
+.mfi-full{grid-column:1/-1;}
+.mbtn{font-size:11px;padding:5px 12px;border-radius:var(--r);border:.5px solid var(--border2);background:transparent;color:var(--text);cursor:pointer;transition:all .12s;}
+.mbtn:hover{background:var(--surface2);}
+.mbtn-p{background:var(--info-bg);border-color:var(--info);color:var(--info);}
+.m-err{font-size:10px;color:var(--red);min-height:14px;margin:4px 0;}
+
+/* ══ LAYER EDITOR ══ */
+.layer-editor{background:var(--surface);border:.5px solid var(--border2);border-radius:var(--r);padding:10px 12px;}
+.le-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.le-color{width:22px;height:22px;border-radius:50%;border:.5px solid var(--border2);cursor:pointer;flex-shrink:0;}
+.le-name{font-size:11px;padding:3px 7px;border-radius:var(--r);border:.5px solid var(--border2);background:var(--surface2);color:var(--text);flex:1;}
+.le-name:focus{outline:none;border-color:var(--accent);}
+.le-del{font-size:10px;padding:2px 6px;border-radius:var(--r);border:.5px solid var(--border2);background:transparent;color:var(--red);cursor:pointer;}
+
+/* misc */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.alert{border-radius:var(--r);padding:8px 10px;font-size:11px;line-height:1.6;margin-bottom:8px;}
+.alert-info{background:var(--info-bg);color:var(--info);}
+.alert-warn{background:var(--amber-bg);color:var(--amber);}
+</style>
+</head>
+<body>
+
+<!-- ══ TOOLBAR ══ -->
+<div class="toolbar">
+  <div class="tb-brand">SMG SCREENER</div>
+  <div class="tb-views">
+    <button class="tv-btn on" id="vb-map" onclick="switchView('map')">🗺 Mapa</button>
+    <button class="tv-btn" id="vb-wl" onclick="switchView('watchlist')">📋 Watchlist</button>
+  </div>
+  <div class="tb-sep"></div>
+  <!-- Map toolbar -->
+  <div id="map-tb" style="display:flex;gap:6px;align-items:center;">
+    <input class="tb-input" id="mapSearch" placeholder="Hledat ticker…" oninput="onMapSearch(this.value)">
+    <button class="tb-btn" onclick="resetLayout()">⟳ Rozložit</button>
+    <button class="tb-btn" id="btn-edit-layers" onclick="openLayerEditor()">⚙ Vrstvy</button>
+  </div>
+  <!-- WL toolbar -->
+  <div id="wl-tb" style="display:none;gap:6px;align-items:center;flex-wrap:wrap;">
+    <input class="tb-input" id="wlSearch" placeholder="Hledat ticker…" oninput="renderWL()">
+    <button class="tb-btn" id="btn-star" onclick="toggleOnlyStar()">⭐ Sledované</button>
+    <button class="tb-btn" id="btn-ptf" onclick="toggleOnlyPtf()">📁 Portfolio</button>
+    <button class="tb-btn" onclick="resetWLFilters()">Reset</button>
+    <button class="tb-btn" style="border-color:rgba(24,95,165,.4);color:var(--accent);" onclick="openAddModal()">+ Přidat</button>
+  </div>
+  <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
+    <input type="password" class="tb-input" id="fhKey" placeholder="Finnhub API…" style="width:105px;" onchange="onFhKey(this.value)" onpaste="setTimeout(()=>onFhKey(this.value),50)">
+    <span id="fhStatus" style="font-size:9px;font-family:'Space Mono',monospace;color:var(--muted);white-space:nowrap;"></span>
+  </div>
+</div>
+
+<div class="app-body">
+
+<!-- LEFT PANEL -->
+<div class="left-panel" id="left-panel">
+  <div class="lp-sect">
+    <div class="lp-tit">Vrstvy supply chain</div>
+    <div id="layer-filters"></div>
+  </div>
+  <div class="firms-hdr">
+    <span class="firms-hdr-txt" id="firms-hdr-txt">Firmy</span>
+    <button id="btn-clear-sel" onclick="clearSelection()" style="display:none;font-size:9px;padding:2px 6px;border-radius:var(--r);border:.5px solid var(--border2);background:var(--red-bg);color:var(--red);cursor:pointer;">✕ Zrušit</button>
+  </div>
+  <div class="dir-legend" id="dir-legend">
+    <span style="font-size:10px;color:var(--info);display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:14px;height:2px;background:#38bdf8;border-radius:1px;"></span>↑ Dodavatel</span>
+    <span style="font-size:10px;color:var(--amber);display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:14px;height:2px;background:#fbbf24;border-radius:1px;"></span>↓ Odběratel</span>
+  </div>
+  <div class="firms-list" id="firms-list">
+    <div class="firms-empty">Klikni na ticker v mapě pro zobrazení propojených firem</div>
+  </div>
+</div>
+
+<!-- CENTER -->
+<div class="center" id="center-pane">
+
+  <!-- MAP VIEW -->
+  <div id="map-view" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+    <div class="map-area" id="mapArea">
+      <canvas id="mainCanvas"></canvas>
+      <div class="map-tt" id="mapTT"></div>
+      <div class="map-legend" id="mapLegend"></div>
+      <div class="map-stats">
+        <div class="ms"><span id="statNodes">0</span> firem</div>
+        <div class="ms"><span id="statEdges">0</span> vazeb</div>
+      </div>
+    </div>
+    <div class="bottom-area">
+      <!-- DETAIL -->
+      <div class="detail-area" id="detArea">
+        <div class="det-empty" id="detEmpty" style="font-size:11px;color:var(--muted);">
+          <div style="font-size:24px;opacity:.2;">🗺</div>
+          Klikni na ticker v mapě
+        </div>
+        <div id="detContent" style="display:none;"></div>
+      </div>
+      <!-- SCREENING -->
+      <div class="screening-area" id="scrArea">
+        <div class="scr-empty" id="scrEmpty">
+          <div style="font-size:24px;opacity:.2;">📊</div>
+          <div style="font-size:11px;color:var(--muted);">5-bodový screening</div>
+          <div style="font-size:10px;color:var(--hint);">Vyber ticker v mapě → načtou se data z Finnhub</div>
+        </div>
+        <div id="scrContent" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WATCHLIST VIEW -->
+  <div id="wl-view" style="display:none;flex:1;overflow-y:auto;padding:12px 16px;background:var(--bg);">
+    <div class="wl-stats" id="wl-stats"></div>
+    <div class="wl-filters" id="wl-sect-filters"></div>
+    <div class="wl-tbl-wrap">
+      <table class="wl-tbl">
+        <thead><tr id="wl-thead-row">
+          <th style="width:22px;"></th>
+          <th class="draggable" data-col="map" draggable="true" style="width:36px;text-align:center;">🗺</th>
+          <th class="draggable" data-col="t"      draggable="true" onclick="wlSort('t')">Ticker ↕</th>
+          <th class="draggable" data-col="n"      draggable="true" onclick="wlSort('n')">Společnost ↕</th>
+          <th class="draggable" data-col="sector" draggable="true" onclick="wlSort('sector')">Sektor ↕</th>
+          <th class="draggable" data-col="layer"  draggable="true" onclick="wlSort('layer')">Vrstva ↕</th>
+          <th class="draggable" data-col="country"draggable="true" onclick="wlSort('country')">Země ↕</th>
+          <th class="draggable" data-col="score"  draggable="true" onclick="wlSort('score')">Skóre ↕</th>
+          <th class="draggable" data-col="verdict"draggable="true" onclick="wlSort('verdict')">Verdikt ↕</th>
+          <th data-col="action">Akce</th>
+        </tr></thead>
+        <tbody id="wl-tbody"></tbody>
+      </table>
+    </div>
+    <div style="font-size:10px;color:var(--hint);margin-top:5px;">✎ editace · 🗺 zobrazit v mapě · Data ze Stock Analysis → export XLSX → import · Uloženo lokálně</div>
+  </div>
+
+</div>
+</div><!-- /.app-body -->
+
+<!-- ADD/EDIT MODAL -->
+<div class="overlay" id="add-modal" style="display:none;">
+  <div class="modal">
+    <h3 id="modal-h">Přidat firmu</h3>
+    <p id="modal-p">Zadej ticker – profil se načte automaticky z Finnhub (pokud máš API klíč). Ostatní pole můžeš doplnit nebo upravit.</p>
+    <div class="mfg">
+      <div class="mff"><span class="mfl">Ticker *</span>
+        <div style="display:flex;gap:4px;">
+          <input class="mfi" id="m-t" placeholder="TXN" style="flex:1;">
+          <button style="font-size:10px;padding:5px 8px;border-radius:var(--r);border:.5px solid var(--border2);background:var(--info-bg);color:var(--info);cursor:pointer;" onclick="loadFhProfile()">↓ Načíst</button>
+        </div>
+      </div>
+      <div class="mff"><span class="mfl">Název *</span><input class="mfi" id="m-n" placeholder="Texas Instruments"></div>
+      <div class="mff"><span class="mfl">Sektor</span><input class="mfi" id="m-sector" placeholder="Semiconductor"></div>
+      <div class="mff"><span class="mfl">Subsector / kategorie</span><input class="mfi" id="m-cat" placeholder="IDM analog"></div>
+      <div class="mff"><span class="mfl">Vrstva</span>
+        <select class="mfi" id="m-layer"><option value="">– nevybráno –</option></select>
+      </div>
+      <div class="mff"><span class="mfl">Země výroby</span><input class="mfi" id="m-country" placeholder="USA"></div>
+      <div class="mff"><span class="mfl">Verdikt</span>
+        <select class="mfi" id="m-verdict"><option>Koupit</option><option selected>Sledovat</option><option>Čekat</option><option>Prodat</option></select>
+      </div>
+      <div class="mff"><span class="mfl">Portfolio</span>
+        <select class="mfi" id="m-ptf"><option value="0">Ne</option><option value="1">Ano</option></select>
+      </div>
+      <div class="mff mfi-full"><span class="mfl">Popis firmy</span><textarea class="mfi" id="m-desc" rows="2" placeholder="Stručný popis…" style="resize:vertical;font-family:inherit;"></textarea></div>
+      <div class="mff mfi-full"><span class="mfl">Propojení – tickery oddělené čárkou (zákazníci/dodavatelé)</span><input class="mfi" id="m-links" placeholder="ASML, AMAT, NVDA, AAPL"></div>
+    </div>
+    <div class="m-err" id="m-err"></div>
+    <div style="display:flex;gap:7px;justify-content:flex-end;">
+      <button class="mbtn" onclick="closeAddModal()">Zrušit</button>
+      <button class="mbtn mbtn-p" id="m-save" onclick="saveModal()">Přidat ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- LAYER EDITOR MODAL -->
+<div class="overlay" id="layer-modal" style="display:none;">
+  <div class="modal" style="max-width:400px;">
+    <h3>Správa vrstev</h3>
+    <p>Vrstvy definují supply chain ekosystém. Každá firma je přiřazena k vrstvě.</p>
+    <div id="layer-edit-list"></div>
+    <button style="font-size:11px;padding:5px 10px;border-radius:var(--r);border:.5px solid var(--border2);background:var(--green-bg);color:var(--green);cursor:pointer;margin-top:6px;" onclick="addLayer()">+ Přidat vrstvu</button>
+    <div style="display:flex;gap:7px;justify-content:flex-end;margin-top:12px;">
+      <button class="mbtn" onclick="closeLayerEditor()">Zrušit</button>
+      <button class="mbtn mbtn-p" onclick="saveLayerEditor()">Uložit ✓</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+// ════════════════════════════════════════════════════
+// STORAGE KEYS
+// ════════════════════════════════════════════════════
+const SK_FIRMS   = 'smg_firms_v1';
+const SK_LAYERS  = 'smg_layers_v1';
+const SK_LINKS   = 'smg_links_v1';
+const SK_STARRED = 'smg_starred_v1';
+const SK_SCR     = 'smg_scr_v1';    // screening data (bod 5 – manuální)
+const SK_FHK     = 'smg_fhk';
+
+// ════════════════════════════════════════════════════
+// DEFAULT DATA – semiconductor supply chain
+// ════════════════════════════════════════════════════
+const DEFAULT_LAYERS = [
+  {id:'L1',name:'Suroviny',             color:'#10b981'},
+  {id:'L2',name:'Komponenty',           color:'#38bdf8'},
+  {id:'L3',name:'Výroba',               color:'#a78bfa'},
+  {id:'L4',name:'Distribuce',           color:'#fbbf24'},
+  {id:'L5',name:'Konečný produkt',      color:'#f87171'},
+];
+
+const DEFAULT_FIRMS = [
+  {t:'LIN', n:'Linde',               sector:'Chemie',          cat:'Průmyslové plyny', layer:'L1',country:'USA/DE', verdict:'Sledovat',ptf:0,desc:'Největší dodavatel N₂/H₂/He pro fabs.',starred:0},
+  {t:'ENTG',n:'Entegris',            sector:'Semiconductor',   cat:'Čisté materiály',  layer:'L1',country:'USA',    verdict:'Sledovat',ptf:1,desc:'Filtry a kontejnery pro fabs.',starred:0},
+  {t:'SHECY',n:'Shin-Etsu',          sector:'Chemie',          cat:'Silicon wafery',   layer:'L1',country:'Japan',  verdict:'Sledovat',ptf:0,desc:'Největší výrobce 300mm waferů.',starred:0},
+  {t:'ASML',n:'ASML Holding',        sector:'Semiconductor',   cat:'Litografie',       layer:'L2',country:'NL',     verdict:'Sledovat',ptf:1,desc:'100% monopol EUV litografie.',starred:1},
+  {t:'AMAT',n:'Applied Materials',   sector:'Semiconductor',   cat:'Zařízení',         layer:'L2',country:'USA',    verdict:'Sledovat',ptf:0,desc:'Největší portfolio wafer equipment.',starred:0},
+  {t:'LRCX',n:'Lam Research',        sector:'Semiconductor',   cat:'Etch/Dep',         layer:'L2',country:'USA',    verdict:'Sledovat',ptf:1,desc:'Etch/deposition duopol.',starred:0},
+  {t:'KLAC',n:'KLA Corporation',     sector:'Semiconductor',   cat:'Metrologie',       layer:'L2',country:'USA',    verdict:'Sledovat',ptf:1,desc:'Monopol inspekce a metrologie.',starred:1},
+  {t:'SNPS',n:'Synopsys',            sector:'Software',        cat:'EDA',              layer:'L2',country:'USA',    verdict:'Sledovat',ptf:0,desc:'EDA duopol s Cadence.',starred:0},
+  {t:'CDNS',n:'Cadence Design',      sector:'Software',        cat:'EDA',              layer:'L2',country:'USA',    verdict:'Sledovat',ptf:0,desc:'EDA duopol se Synopsys.',starred:0},
+  {t:'ARM', n:'Arm Holdings',        sector:'Semiconductor',   cat:'IP jádra',         layer:'L2',country:'UK',     verdict:'Sledovat',ptf:0,desc:'99 % mobilních čipů.',starred:0},
+  {t:'TSM', n:'TSMC',                sector:'Semiconductor',   cat:'Foundry',          layer:'L3',country:'Taiwan', verdict:'Koupit',  ptf:1,desc:'Největší a nejpokročilejší foundry.',starred:1},
+  {t:'NVDA',n:'NVIDIA',              sector:'Semiconductor',   cat:'Fabless GPU',      layer:'L3',country:'USA',    verdict:'Sledovat',ptf:0,desc:'Dominantní AI akcelerátory.',starred:1},
+  {t:'AMD', n:'AMD',                 sector:'Semiconductor',   cat:'Fabless CPU/GPU',  layer:'L3',country:'USA',    verdict:'Sledovat',ptf:0,desc:'CPU+GPU, AI čipy MI300.',starred:0},
+  {t:'AVGO',n:'Broadcom',            sector:'Semiconductor',   cat:'Fabless/Network',  layer:'L3',country:'USA',    verdict:'Sledovat',ptf:0,desc:'Custom AI ASIC + networking.',starred:0},
+  {t:'TXN', n:'Texas Instruments',   sector:'Semiconductor',   cat:'IDM analog',       layer:'L3',country:'USA',    verdict:'Koupit',  ptf:1,desc:'Analog a embedded procesory.',starred:1},
+  {t:'MU',  n:'Micron Technology',   sector:'Semiconductor',   cat:'Paměti',           layer:'L3',country:'USA',    verdict:'Sledovat',ptf:1,desc:'DRAM + NAND + HBM paměti.',starred:0},
+  {t:'INTC',n:'Intel',               sector:'Semiconductor',   cat:'IDM/Foundry',      layer:'L3',country:'USA',    verdict:'Sledovat',ptf:0,desc:'x86 CPU + Intel Foundry.',starred:0},
+  {t:'FDX', n:'FedEx',               sector:'Logistika',       cat:'Express přeprava', layer:'L4',country:'USA',    verdict:'Sledovat',ptf:0,desc:'Express přeprava elektroniky.',starred:0},
+  {t:'UPS', n:'UPS',                 sector:'Logistika',       cat:'Globální přeprava',layer:'L4',country:'USA',    verdict:'Sledovat',ptf:0,desc:'Globální přepravní síť.',starred:0},
+  {t:'MSFT',n:'Microsoft',           sector:'Technology',      cat:'Cloud/Software',   layer:'L5',country:'USA',    verdict:'Sledovat',ptf:0,desc:'Azure AI cloud.',starred:0},
+  {t:'AAPL',n:'Apple',               sector:'Technology',      cat:'Consumer',         layer:'L5',country:'USA',    verdict:'Sledovat',ptf:0,desc:'iPhone, Mac – M-čipy od TSMC.',starred:0},
+  {t:'AMZN',n:'Amazon',              sector:'Technology',      cat:'Cloud/E-commerce', layer:'L5',country:'USA',    verdict:'Sledovat',ptf:0,desc:'AWS, Trainium čipy.',starred:0},
+  {t:'GOOGL',n:'Alphabet',           sector:'Technology',      cat:'Cloud/Search',     layer:'L5',country:'USA',    verdict:'Sledovat',ptf:0,desc:'GCP, TPU akcelerátory.',starred:0},
+  {t:'META',n:'Meta Platforms',      sector:'Technology',      cat:'Social/AI',        layer:'L5',country:'USA',    verdict:'Sledovat',ptf:0,desc:'AI GPU klastry, MTIA čip.',starred:0},
+];
+
+const DEFAULT_LINKS = [
+  ['LIN','ASML'],['LIN','AMAT'],['ENTG','AMAT'],['ENTG','LRCX'],['SHECY','ASML'],
+  ['ASML','TSM'],['ASML','INTC'],['ASML','MU'],
+  ['AMAT','TSM'],['AMAT','INTC'],['LRCX','TSM'],['LRCX','MU'],
+  ['KLAC','TSM'],['KLAC','INTC'],['SNPS','NVDA'],['SNPS','AMD'],['CDNS','NVDA'],
+  ['ARM','AAPL'],['ARM','NVDA'],['ARM','AMD'],
+  ['TSM','NVDA'],['TSM','AMD'],['TSM','AAPL'],['TSM','AVGO'],
+  ['NVDA','MSFT'],['NVDA','META'],['NVDA','AMZN'],['NVDA','GOOGL'],
+  ['MU','MSFT'],['AVGO','GOOGL'],['AVGO','MSFT'],['AVGO','META'],
+  ['TXN','MSFT'],['TXN','AAPL'],
+  ['FDX','NVDA'],['FDX','AAPL'],['UPS','AAPL'],
+  ['INTC','MSFT'],
+];
+
+// ════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════
+let firms=[], layers=[], links=[], starred=new Set(), scrData={};
+let fhKey = localStorage.getItem(SK_FHK)||'';
+let currentView='map', mapInit=false;
+let selected=null, hovered=null;
+let visibleLayers=new Set();
+let nodes=[], edges=[];
+let pan={x:0,y:0}, scale=1;
+let isDragging=false, dragStart={x:0,y:0,ox:0,oy:0};
+let simFrame=null, alpha=1;
+let canvas, ctx, W, H;
+let wlOnlyStar=false, wlOnlyPtf=false, wlSC=null, wlSD=1;
+let wlActiveSecFilters=new Set();
+let selectedWLRow=null;
+
+function toggleWLRow(ticker){
+  selectedWLRow=selectedWLRow===ticker?null:ticker;
+  document.querySelectorAll('.wl-tbl tr[data-ticker]').forEach(tr=>{
+    tr.classList.toggle('row-selected',tr.dataset.ticker===selectedWLRow);
+  });
+}
+let modalEditIdx=null;
+let layerEditData=[];
+let fcfChart=null, detailFhData={};
+
+// ════════════════════════════════════════════════════
+// LOAD / SAVE
+// ════════════════════════════════════════════════════
+function loadAll(){
+  try{firms=JSON.parse(localStorage.getItem(SK_FIRMS)||'null')||JSON.parse(JSON.stringify(DEFAULT_FIRMS));}catch(e){firms=JSON.parse(JSON.stringify(DEFAULT_FIRMS));}
+  try{layers=JSON.parse(localStorage.getItem(SK_LAYERS)||'null')||JSON.parse(JSON.stringify(DEFAULT_LAYERS));}catch(e){layers=JSON.parse(JSON.stringify(DEFAULT_LAYERS));}
+  try{links=JSON.parse(localStorage.getItem(SK_LINKS)||'null')||JSON.parse(JSON.stringify(DEFAULT_LINKS));}catch(e){links=JSON.parse(JSON.stringify(DEFAULT_LINKS));}
+  try{starred=new Set(JSON.parse(localStorage.getItem(SK_STARRED)||'[]'));}catch(e){starred=new Set();}
+  try{scrData=JSON.parse(localStorage.getItem(SK_SCR)||'{}');}catch(e){scrData={};}
+  visibleLayers=new Set(layers.map(l=>l.id));
+}
+function saveAll(){
+  localStorage.setItem(SK_FIRMS,JSON.stringify(firms));
+  localStorage.setItem(SK_LAYERS,JSON.stringify(layers));
+  localStorage.setItem(SK_LINKS,JSON.stringify(links));
+  localStorage.setItem(SK_STARRED,JSON.stringify([...starred]));
+  localStorage.setItem(SK_SCR,JSON.stringify(scrData));
+}
+function saveStarred(){localStorage.setItem(SK_STARRED,JSON.stringify([...starred]));}
+function saveScrData(){localStorage.setItem(SK_SCR,JSON.stringify(scrData));}
+
+// ════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════
+function layerById(id){return layers.find(l=>l.id===id)||{id:'?',name:'Neznámá',color:'#888'};}
+function layerColor(id){return layerById(id).color;}
+function firmByTicker(t){return firms.find(f=>f.t===t);}
+
+// ════════════════════════════════════════════════════
+// VIEW SWITCH
+// ════════════════════════════════════════════════════
+function switchView(v){
+  currentView=v;
+  document.getElementById('map-view').style.display=v==='map'?'flex':'none';
+  document.getElementById('wl-view').style.display=v==='watchlist'?'block':'none';
+  document.getElementById('map-tb').style.display=v==='map'?'flex':'none';
+  document.getElementById('wl-tb').style.display=v==='watchlist'?'flex':'none';
+  document.getElementById('left-panel').style.display=v==='map'?'flex':'none';
+  document.getElementById('vb-map').classList.toggle('on',v==='map');
+  document.getElementById('vb-wl').classList.toggle('on',v==='watchlist');
+  if(v==='map'&&!mapInit){mapInit=true;initMap();}
+  else if(v==='map'&&nodes.length)setTimeout(()=>{resize();renderMap();},50);
+  if(v==='watchlist'){buildWLSectFilters();renderWL();setTimeout(initColDrag,50);}
+}
+
+function showInMap(ticker){
+  switchView('map');
+  setTimeout(()=>selectNode(ticker),180);
+}
+
+// ════════════════════════════════════════════════════
+// FINNHUB
+// ════════════════════════════════════════════════════
+function onFhKey(v){
+  fhKey=v.trim();
+  if(fhKey)localStorage.setItem(SK_FHK,fhKey);
+  else localStorage.removeItem(SK_FHK);
+  const el=document.getElementById('fhStatus');
+  el.textContent=fhKey?'✓ Finnhub':'Yahoo';
+  el.style.color=fhKey?'var(--green)':'var(--muted)';
+}
+
+async function fhGet(endpoint){
+  if(!fhKey)return null;
+  try{
+    const r=await fetch(`https://finnhub.io/api/v1${endpoint}&token=${fhKey}`);
+    return await r.json();
+  }catch(e){return null;}
+}
+
+async function loadFhProfile(){
+  const t=(document.getElementById('m-t').value||'').toUpperCase().trim();
+  if(!t){document.getElementById('m-err').textContent='Zadej ticker.';return;}
+  if(!fhKey){document.getElementById('m-err').textContent='Potřebuješ Finnhub API klíč v toolbaru.';return;}
+  document.getElementById('m-err').textContent='Načítám…';
+  const p=await fhGet(`/stock/profile2?symbol=${t}`);
+  if(!p||!p.name){document.getElementById('m-err').textContent='Ticker nenalezen v Finnhub.';return;}
+  document.getElementById('m-n').value=p.name||'';
+  document.getElementById('m-sector').value=p.finnhubIndustry||'';
+  document.getElementById('m-country').value=p.country||'';
+  document.getElementById('m-desc').value=p.description?p.description.slice(0,200):'';
+  document.getElementById('m-err').textContent='✓ Profil načten';
+  setTimeout(()=>{document.getElementById('m-err').textContent='';},2000);
+}
+
+async function fetchFirmData(ticker){
+  if(!fhKey)return null;
+  const [metricR,profileR,ptR,recR]=await Promise.all([
+    fhGet(`/stock/metric?symbol=${ticker}&metric=all`),
+    fhGet(`/stock/profile2?symbol=${ticker}`),
+    fhGet(`/stock/price-target?symbol=${ticker}`),
+    fhGet(`/recommendation?symbol=${ticker}`),
+  ]);
+  const m=(metricR||{}).metric||{};
+  const p=profileR||{};
+  const pt=(ptR||{});
+  const rec=Array.isArray(recR)&&recR.length?recR[0]:{};
+  return{
+    price:m.marketCapitalization?null:null, // z quotes
+    pe:m['peExclExtraTTM']||m['peTTM']||null,
+    peForward:m['forwardPE']||null,
+    ebitdaMargin:m['ebitdaMarginTTM']||null,
+    grossMargin:m['grossMarginTTM']||null,
+    netMargin:m['netProfitMarginTTM']||null,
+    fcfMargin:m['fcfMarginTTM']||null,
+    roic:m['roicTTM']||null,
+    roe:m['roeTTM']||null,
+    revCagr5:m['revenueGrowth5Y']||null,
+    revTTM:m['revenueTTM']||null,
+    capex:m['capitalExpenditureTTM']||null,
+    interestCoverage:m['currentRatioQuarterly']?null:null, // dopočítáme
+    ebitTTM:m['ebitTTM']||null,
+    interestExpTTM:m['interestExpTTM']||null,
+    debtEq:m['totalDebt/totalEquityAnnual']||null,
+    netDebt:m['netDebtAnnual']||null,
+    beta:m['beta']||null,
+    evEbitda:m['enterpriseValueEbitdaTTM']||null,
+    pb:m['pbAnnual']||null,
+    div:m['dividendYieldIndicatedAnnual']||null,
+    mktcap:p.marketCapitalization||null,
+    country:p.country||null,
+    industry:p.finnhubIndustry||null,
+    ptMean:pt.targetMean||null,
+    ptHigh:pt.targetHigh||null,
+    ptLow:pt.targetLow||null,
+    recBuy:(rec.buy||0)+(rec.strongBuy||0),
+    recHold:rec.hold||0,
+    recSell:(rec.sell||0)+(rec.strongSell||0),
+  };
+}
+
+// ════════════════════════════════════════════════════
+// SCREENING PANEL
+// ════════════════════════════════════════════════════
+function scoreColor(s){return s>=70?'var(--green)':s>=45?'var(--amber)':'var(--red)';}
+function scoreBg(s){return s>=70?'var(--green-bg)':s>=45?'var(--amber-bg)':'var(--red-bg)';}
+function valColor(key,v){
+  if(v==null)return'var(--muted)';
+  const n=parseFloat(v);if(isNaN(n))return'var(--muted)';
+  const good='var(--green)',warn='var(--amber)',bad='var(--red)';
+  const rules={
+    ebitdaMargin:[n>40,n>20],grossMargin:[n>55,n>30],netMargin:[n>20,n>8],
+    fcfMargin:[n>25,n>10],roic:[n>25,n>12],roe:[n>20,n>10],
+    revCagr5:[n>10,n>3],interestCoverage:[n>10,n>4],
+    debtEq:[n<0.5,n<1.2],pe:[n<20,n<35],evEbitda:[n<15,n<25],beta:[n<1,n<1.5],
+  };
+  const r=rules[key];if(!r)return'var(--text)';
+  const inv=['debtEq','pe','evEbitda','beta','interestExpTTM'];
+  if(inv.includes(key)){return n<=parseFloat(r[0])?good:n<=parseFloat(r[1])?warn:bad;}
+  return n>=parseFloat(r[0])?good:n>=parseFloat(r[1])?warn:bad;
+}
+
+function calcScreeningScore(fd,ticker){
+  if(!fd)return 50;
+  let s=50;
+  if(fd.ebitdaMargin!=null){const v=fd.ebitdaMargin;s+=v>40?12:v>25?6:v>10?0:-8;}
+  if(fd.roic!=null){const v=fd.roic;s+=v>30?12:v>15?6:v>8?0:-8;}
+  if(fd.fcfMargin!=null){const v=fd.fcfMargin;s+=v>20?8:v>8?4:v>0?0:-6;}
+  if(fd.interestCoverage!=null){const v=fd.interestCoverage;s+=v>15?5:v>8?2:v>4?0:-5;}
+  if(fd.debtEq!=null){const v=fd.debtEq;s+=v<0.3?5:v<0.8?2:v<1.5?0:-5;}
+  if(fd.revCagr5!=null){const v=fd.revCagr5*100;s+=v>15?8:v>5?4:v>0?0:-5;}
+  const ms=scrData[ticker];
+  if(ms&&ms.mosEst!=null){const u=parseFloat(ms.mosEst);s+=u>20?10:u>5?5:u<0?-8:0;}
+  return Math.max(0,Math.min(100,Math.round(s)));
+}
+
+function renderScreening(ticker,fd){
+  const comp=firmByTicker(ticker);
+  const ms=scrData[ticker]||{};
+  const score=calcScreeningScore(fd,ticker);
+  const ic=fd&&fd.ebitTTM&&fd.interestExpTTM?fd.ebitTTM/Math.abs(fd.interestExpTTM):null;
+  const capexPct=fd&&fd.capex&&fd.revTTM?Math.abs(fd.capex)/fd.revTTM*100:null;
+  const price=detailFhData[ticker]?.price||null;
+  const mos=ms.iv&&price?((parseFloat(ms.iv)-price)/parseFloat(ms.iv)*100):null;
+
+  // Score helpers
+  function sc(s){return s>=70?'var(--green)':s>=45?'var(--amber)':'var(--red)';}
+  function sb(s){return s>=70?'var(--green-bg)':s>=45?'var(--amber-bg)':'var(--red-bg)';}
+
+  // Barva hodnoty
+  function vc(key,n){
+    if(n==null||isNaN(n))return'var(--muted)';
+    const g='var(--green)',w='var(--amber)',b='var(--red)';
+    const inv=['debtEq','pe','peForward','evEbitda','beta'];
+    const thresholds={
+      ebitdaMargin:[40,20],grossMargin:[55,30],netMargin:[20,8],fcfMargin:[25,10],
+      roic:[25,12],roe:[20,10],revCagr5:[10,3],interestCoverage:[10,4],
+      debtEq:[0.5,1.2],pe:[20,35],peForward:[20,35],evEbitda:[15,25],beta:[1,1.5],
+    };
+    const t=thresholds[key];if(!t)return'var(--text)';
+    if(inv.includes(key))return n<=t[0]?g:n<=t[1]?w:b;
+    return n>=t[0]?g:n>=t[1]?w:b;
+  }
+
+  // Řádek ukazatele
+  function itm(lbl,val,key,note){
+    const col=val!=null?vc(key,parseFloat(val)):'var(--muted)';
+    return`<div class="scr-item">
+      <span class="scr-item-lbl">${lbl}</span>
+      <div style="text-align:right;">
+        <div class="scr-item-val" style="color:${col};">${val||'—'}</div>
+        ${note?`<div class="scr-item-note">${note}</div>`:''}
+      </div>
+    </div>`;
+  }
+
+  // Sloupec
+  function col(num,title,items,s){
+    const badge=s!=null?`<span class="scr-col-score" style="background:${sb(s)};color:${sc(s)};">${s}</span>`:'';
+    return`<div class="scr-col">
+      <div class="scr-col-hdr"><span class="scr-col-title">Bod ${num} – ${title}</span>${badge}</div>
+      ${items}
+    </div>`;
+  }
+
+  const noFh='<div style="font-size:10px;color:var(--hint);padding:6px 0;line-height:1.6;">Přidej Finnhub API klíč do toolbaru pro automatická data.</div>';
+
+  // Skóre bodů
+  let s1=50,s2=50,s3=50,s4=50;
+  if(fd){
+    if(fd.ebitdaMargin>40)s1+=15;else if(fd.ebitdaMargin>20)s1+=7;else if(fd.ebitdaMargin!=null&&fd.ebitdaMargin<10)s1-=10;
+    if(fd.roic>25)s1+=15;else if(fd.roic>12)s1+=7;else if(fd.roic!=null&&fd.roic<8)s1-=10;
+    s1=Math.max(0,Math.min(100,s1));
+    if(fd.fcfMargin>20)s2+=15;else if(fd.fcfMargin>8)s2+=7;else if(fd.fcfMargin!=null&&fd.fcfMargin<0)s2-=15;
+    if(capexPct!=null){if(capexPct<8)s2+=10;else if(capexPct>25)s2-=10;}
+    if(fd.revCagr5>0.10)s2+=10;else if(fd.revCagr5!=null&&fd.revCagr5<0)s2-=10;
+    s2=Math.max(0,Math.min(100,s2));
+    if(ic>15)s3+=15;else if(ic>8)s3+=7;else if(ic!=null&&ic<4)s3-=15;
+    if(fd.debtEq<0.5)s3+=10;else if(fd.debtEq!=null&&fd.debtEq>1.5)s3-=10;
+    s3=Math.max(0,Math.min(100,s3));
+    if(fd.pe<20)s4+=10;else if(fd.pe!=null&&fd.pe>35)s4-=10;
+  }
+  if(mos>20)s4+=20;else if(mos>5)s4+=8;else if(mos!=null&&mos<0)s4-=15;
+  s4=Math.max(0,Math.min(100,s4));
+
+  // ── BOD 1: Kvalita ──
+  const c1=fd?`
+    ${itm('EBITDA marže',fd.ebitdaMargin!=null?fd.ebitdaMargin.toFixed(1)+' %':null,'ebitdaMargin','&gt;30 % výborné')}
+    ${itm('Gross marže',fd.grossMargin!=null?fd.grossMargin.toFixed(1)+' %':null,'grossMargin')}
+    ${itm('Net marže',fd.netMargin!=null?fd.netMargin.toFixed(1)+' %':null,'netMargin')}
+    ${itm('ROIC',fd.roic!=null?fd.roic.toFixed(1)+' %':null,'roic','&gt; WACC ~10 %')}
+    ${itm('ROE',fd.roe!=null?fd.roe.toFixed(1)+' %':null,'roe')}
+  `:noFh;
+
+  // ── BOD 2: FCF & růst ──
+  const c2=fd?`
+    ${itm('FCF marže',fd.fcfMargin!=null?fd.fcfMargin.toFixed(1)+' %':null,'fcfMargin')}
+    ${itm('CapEx / Revenue',capexPct!=null?capexPct.toFixed(1)+' %':null,'capexPct','&lt;10 % = light')}
+    ${itm('Revenue CAGR 5Y',fd.revCagr5!=null?(fd.revCagr5*100).toFixed(1)+' %':null,'revCagr5')}
+    ${itm('Revenue TTM',fd.revTTM!=null?'$'+fd.revTTM.toFixed(1)+'B':null)}
+  `:noFh;
+
+  // ── BOD 3: Rozvaha ──
+  const c3=fd?`
+    ${itm('Interest Coverage',ic!=null?ic.toFixed(1)+'×':null,'interestCoverage','min 5×')}
+    ${itm('Dluh / VK (D/E)',fd.debtEq!=null?fd.debtEq.toFixed(2)+'×':null,'debtEq')}
+    ${itm('Čistý dluh',fd.netDebt!=null?'$'+fd.netDebt.toFixed(1)+'B':null)}
+    ${itm('Beta',fd.beta!=null?fd.beta.toFixed(2):null,'beta')}
+  `:noFh;
+
+  // ── BOD 4: Valuace ──
+  const mosW=mos!=null?Math.max(4,Math.min(96,mos*2+50)):null;
+  const mosCol=mos!=null?(mos>20?'var(--green)':mos>0?'var(--amber)':'var(--red)'):'var(--muted)';
+  const c4=`
+    ${fd?`
+    ${itm('P/E TTM',fd.pe!=null?fd.pe.toFixed(1)+'×':null,'pe')}
+    ${itm('P/E Forward',fd.peForward!=null?fd.peForward.toFixed(1)+'×':null,'peForward')}
+    ${itm('EV/EBITDA',fd.evEbitda!=null?fd.evEbitda.toFixed(1)+'×':null,'evEbitda')}
+    ${itm('Price Target',fd.ptMean!=null?'$'+fd.ptMean.toFixed(0):null,null,fd.ptLow&&fd.ptHigh?'$'+fd.ptLow.toFixed(0)+'–$'+fd.ptHigh.toFixed(0):null)}
+    ${itm('Analytici',fd.recBuy!=null?'B'+fd.recBuy+' H'+fd.recHold+' S'+fd.recSell:null)}
+    `:''}
+    <div class="scr-item">
+      <span class="scr-item-lbl">Margin of Safety</span>
+      <span class="scr-item-val" style="color:${mosCol};">${mos!=null?(mos>0?'+':'')+mos.toFixed(1)+' %':'—'}</span>
+    </div>
+    ${mosW!=null?`<div class="mos-wrap" style="margin-top:2px;"><div class="mos-fill" style="width:${mosW}%;background:${mosCol};"></div></div>`:''}
+    <div class="scr-edit-inline">
+      <input class="scr-ei" id="ef-iv" value="${ms.iv||''}" placeholder="DCF Fair Value ($)">
+      <button class="scr-save-btn" onclick="saveBod4('${ticker}')">Uložit DCF ✓</button>
+    </div>`;
+
+  // ── BOD 5: Ekosystém ──
+  const geoCol=ms.geoPolitical==='Vysoké'?'var(--red)':ms.geoPolitical==='Střední'?'var(--amber)':'var(--muted)';
+  const c5=`
+    <div class="scr-item"><span class="scr-item-lbl">Sektor</span><span class="scr-item-val" style="color:var(--text);font-family:inherit;">${comp?.sector||fd?.industry||'—'}</span></div>
+    <div class="scr-item"><span class="scr-item-lbl">Vrstva</span><span class="scr-item-val" style="color:${layerColor(comp?.layer||'')};font-family:inherit;">${layerById(comp?.layer||'').name}</span></div>
+    <div class="scr-item"><span class="scr-item-lbl">Země</span><span class="scr-item-val" style="font-family:inherit;">${ms.mfgCountry||comp?.country||'—'}</span></div>
+    <div class="scr-item"><span class="scr-item-lbl">Čína %</span><span class="scr-item-val" style="color:${ms.chinaRev>20?'var(--red)':ms.chinaRev>10?'var(--amber)':'var(--muted)'};">${ms.chinaRev!=null?ms.chinaRev+' %':'—'}</span></div>
+    <div class="scr-item"><span class="scr-item-lbl">Zákazníci</span><span class="scr-item-val" style="font-family:inherit;font-size:9px;color:var(--text);">${ms.customers||'—'}</span></div>
+    <div class="scr-item"><span class="scr-item-lbl">Dodavatelé</span><span class="scr-item-val" style="font-family:inherit;font-size:9px;color:var(--text);">${ms.suppliers||'—'}</span></div>
+    <div class="scr-item"><span class="scr-item-lbl">Geo riziko</span><span class="scr-item-val" style="color:${geoCol};">${ms.geoPolitical||'—'}</span></div>
+    <div class="scr-item"><span class="scr-item-lbl">Export ctrl</span><span class="scr-item-val" style="color:${ms.exportCtrl==='Ano'?'var(--red)':'var(--muted)'};">${ms.exportCtrl||'—'}</span></div>
+    <div class="scr-edit-inline">
+      <input class="scr-ei" id="ef-mfg"   value="${ms.mfgCountry||comp?.country||''}" placeholder="Výrobní země">
+      <input class="scr-ei" id="ef-china" value="${ms.chinaRev||''}" placeholder="Čína revenue %">
+      <input class="scr-ei" id="ef-cust"  value="${ms.customers||''}" placeholder="Zákazníci (&gt;10 %)">
+      <input class="scr-ei" id="ef-supp"  value="${ms.suppliers||''}" placeholder="Dodavatelé">
+      <select class="scr-ei" id="ef-geo">
+        <option ${ms.geoPolitical==='Nízké'?'selected':''}>Nízké</option>
+        <option ${ms.geoPolitical==='Střední'?'selected':''}>Střední</option>
+        <option ${ms.geoPolitical==='Vysoké'?'selected':''}>Vysoké</option>
+      </select>
+      <select class="scr-ei" id="ef-exp">
+        <option ${ms.exportCtrl==='Ne'?'selected':''}>Ne</option>
+        <option ${ms.exportCtrl==='Ano'?'selected':''}>Ano</option>
+      </select>
+      <button class="scr-save-btn" onclick="saveBod5('${ticker}')">Uložit ✓</button>
+    </div>`;
+
+  document.getElementById('scrEmpty').style.display='none';
+  document.getElementById('scrContent').style.display='block';
+  document.getElementById('scrContent').innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <div class="scr-score" style="background:${sb(score)};color:${sc(score)};width:34px;height:34px;font-size:14px;">${score}</div>
+      <div>
+        <div style="font-size:12px;font-weight:500;">${ticker} – 5-bodový screening</div>
+        <div style="font-size:10px;color:var(--muted);">${comp?.sector||''} ${fhKey?'· <span style="color:var(--green);">Finnhub live</span>':'· <span style="color:var(--amber);">Přidej API klíč</span>'}</div>
+      </div>
+    </div>
+    <div class="scr-cols">
+      ${col(1,'Kvalita',c1,s1)}
+      ${col(2,'FCF & růst',c2,s2)}
+      ${col(3,'Rozvaha',c3,s3)}
+      ${col(4,'Valuace',c4,s4)}
+      ${col(5,'Ekosystém',c5,null)}
+    </div>`;
+}
+
+
+
+
+function saveBod4(ticker){
+  const iv=document.getElementById('ef-iv')?.value;
+  const price=detailFhData[ticker]?.price||null;
+  if(!scrData[ticker])scrData[ticker]={};
+  scrData[ticker].iv=iv;
+  if(iv&&price){scrData[ticker].mosEst=((parseFloat(iv)-price)/parseFloat(iv)*100).toFixed(1);}
+  saveScrData();
+  document.getElementById('bod4-edit-form').style.display='none';
+  // Přerenderuj screening
+  renderScreening(ticker,detailFhData[ticker]?._raw||null);
+}
+
+function saveBod5(ticker){
+  if(!scrData[ticker])scrData[ticker]={};
+  scrData[ticker].mfgCountry=document.getElementById('ef-mfg')?.value||'';
+  scrData[ticker].chinaRev=document.getElementById('ef-china')?.value||null;
+  scrData[ticker].customers=document.getElementById('ef-cust')?.value||'';
+  scrData[ticker].suppliers=document.getElementById('ef-supp')?.value||'';
+  scrData[ticker].geoPolitical=document.getElementById('ef-geo')?.value||'';
+  scrData[ticker].exportCtrl=document.getElementById('ef-exp')?.value||'';
+  saveScrData();
+  document.getElementById('bod5-edit-form').style.display='none';
+  renderScreening(ticker,detailFhData[ticker]?._raw||null);
+}
+
+// ════════════════════════════════════════════════════
+// DETAIL PANEL
+// ════════════════════════════════════════════════════
+async function showDetail(ticker){
+  const comp=firmByTicker(ticker);if(!comp)return;
+  const col=layerColor(comp.layer);
+
+  document.getElementById('detEmpty').style.display='none';
+  document.getElementById('detContent').style.display='block';
+
+  // Základní kostra okamžitě
+  const html=`
+    <div class="det-hdr">
+      <div style="flex:1;">
+        <div class="det-tick" style="color:${col};">${ticker}</div>
+        <div class="det-name">${comp.n}</div>
+        <span class="det-badge" style="background:${col}18;color:${col};border:.5px solid ${col}44;">${comp.cat||comp.sector||''}</span>
+      </div>
+      <div>
+        <div class="det-price" style="color:${col};" id="det-price">—</div>
+        <div class="det-chg" id="det-chg" style="color:var(--muted);">—</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px;">${comp.desc||'Popis nenalezen.'}</div>
+    <div class="det-tabs">
+      <button class="det-tab on" onclick="showDetTab('overview')">Přehled</button>
+      <button class="det-tab" onclick="showDetTab('fcf')">FCF</button>
+      <button class="det-tab" onclick="showDetTab('links')">Propojení</button>
+    </div>
+    <div id="dt-overview">
+      <div id="det-kpis-wrap" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(85px,1fr));gap:5px;margin-bottom:8px;">
+        <div style="font-size:11px;color:var(--hint);">${fhKey?'Načítám data z Finnhub…':'Přidej Finnhub API klíč pro live data.'}</div>
+      </div>
+    </div>
+    <div id="dt-fcf" style="display:none;">
+      <div class="det-sec">FCF historický vývoj (Finnhub)</div>
+      <div class="det-fcf-wrap"><canvas id="fcfCv"></canvas></div>
+      <div style="font-size:10px;color:var(--hint);margin-top:3px;" id="fcf-note">${fhKey?'Načítám…':'Potřebuješ Finnhub API klíč.'}</div>
+    </div>
+    <div id="dt-links" style="display:none;">
+      <div class="det-sec">Propojené firmy</div>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">
+        ${getLinkedTickers(ticker).map(t=>{
+          const lc=firmByTicker(t);if(!lc)return'';
+          const lcc=layerColor(lc.layer);
+          return`<div onclick="selectNode('${t}')" style="cursor:pointer;background:${lcc}14;border:.5px solid ${lcc}33;border-radius:var(--r);padding:3px 8px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:${lcc};">${t}</div>`;
+        }).join('')}
+      </div>
+    </div>`;
+
+  document.getElementById('detContent').innerHTML=html;
+
+  // Screening prázdný stav
+  renderScreening(ticker,null);
+
+  // Finnhub async
+  if(fhKey){
+    const fd=await fetchFirmData(ticker);
+    if(fd){
+      // Uložíme pro saveBod4/5
+      if(!detailFhData[ticker])detailFhData[ticker]={};
+      detailFhData[ticker]._raw=fd;
+
+      // KPI wrap
+      const kpis=[
+        ['EBITDA marže',fd.ebitdaMargin!=null?fd.ebitdaMargin.toFixed(1)+' %':null,fd.ebitdaMargin,'ebitdaMargin'],
+        ['ROIC',fd.roic!=null?fd.roic.toFixed(1)+' %':null,fd.roic,'roic'],
+        ['FCF marže',fd.fcfMargin!=null?fd.fcfMargin.toFixed(1)+' %':null,fd.fcfMargin,'fcfMargin'],
+        ['P/E',fd.pe!=null?fd.pe.toFixed(1)+'×':null,fd.pe,'pe'],
+        ['Beta',fd.beta!=null?fd.beta.toFixed(2):null,fd.beta,'beta'],
+        ['D/E',fd.debtEq!=null?fd.debtEq.toFixed(2)+'×':null,fd.debtEq,'debtEq'],
+      ].filter(k=>k[1]);
+      const kpiHtml=kpis.map(([l,v,raw,key])=>`
+        <div style="background:var(--surface2);border-radius:var(--r);padding:6px 8px;">
+          <div style="font-size:9px;color:var(--muted);margin-bottom:2px;">${l}</div>
+          <div style="font-size:14px;font-weight:500;color:${valColor(key,raw)};">${v}</div>
+        </div>`).join('');
+      const kw=document.getElementById('det-kpis-wrap');
+      if(kw)kw.innerHTML=kpiHtml||'<div style="font-size:11px;color:var(--hint);">Data nedostupná pro tento ticker.</div>';
+
+      // Překresli screening s daty
+      renderScreening(ticker,fd);
+      fetchFCHist(ticker);
+    }
+  }
+}
+
+function showDetTab(tab){
+  ['overview','fcf','links'].forEach((t,i)=>{
+    const el=document.getElementById('dt-'+t);if(el)el.style.display=t===tab?'block':'none';
+    document.querySelectorAll('.det-tab')[i]?.classList.toggle('on',t===tab);
+  });
+}
+
+async function fetchFCHist(ticker){
+  if(!fhKey)return;
+  try{
+    const r=await fhGet(`/stock/financials-reported?symbol=${ticker}&freq=annual`);
+    const reports=(r?.data||[]).slice(0,7).reverse();
+    const fcfD={};
+    reports.forEach(rep=>{
+      const yr=rep.year;
+      const cf=rep.report?.cf||[];
+      const cfo=cf.find(x=>x.concept&&x.concept.includes('OperatingActivities')&&!x.concept.includes('Discontinued'));
+      const capex=cf.find(x=>x.concept&&x.concept.includes('AcquirePropertyPlant'));
+      if(cfo&&yr)fcfD[yr]=+((cfo.value-(capex?Math.abs(capex.value):0))/1e9).toFixed(2);
+    });
+    if(Object.keys(fcfD).length>=2)renderFCFChart(ticker,fcfD);
+  }catch(e){}
+}
+
+function renderFCFChart(ticker,fcfD){
+  const cv=document.getElementById('fcfCv');if(!cv)return;
+  if(fcfChart){fcfChart.destroy();fcfChart=null;}
+  const yrs=Object.keys(fcfD).sort(),vals=yrs.map(y=>fcfD[y]);
+  const col=layerColor(firmByTicker(ticker)?.layer||'');
+  const isDk=matchMedia('(prefers-color-scheme:dark)').matches;
+  const tc=isDk?'#aaa':'#777',gc=isDk?'rgba(255,255,255,.06)':'rgba(0,0,0,.05)';
+  fcfChart=new Chart(cv.getContext('2d'),{type:'bar',data:{labels:yrs,datasets:[{data:vals,backgroundColor:vals.map(v=>v<0?'rgba(163,45,45,.7)':col+'cc'),borderRadius:3}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'$'+c.parsed.y.toFixed(2)+'B'}}},scales:{x:{ticks:{color:tc,font:{size:10}},grid:{color:gc}},y:{ticks:{color:tc,font:{size:10},callback:v=>'$'+v+'B'},grid:{color:gc}}}}});
+  const note=document.getElementById('fcf-note');
+  if(note)note.textContent='FCF = Op.CF – CapEx · Zdroj: Finnhub výroční zprávy';
+}
+
+function clearDetail(){
+  selected=null;
+  document.getElementById('detEmpty').style.display='flex';
+  document.getElementById('detContent').style.display='none';
+  document.getElementById('scrEmpty').style.display='flex';
+  document.getElementById('scrContent').style.display='none';
+  if(fcfChart){fcfChart.destroy();fcfChart=null;}
+}
+
+// ════════════════════════════════════════════════════
+// WATCHLIST
+// ════════════════════════════════════════════════════
+function getSectors(){return[...new Set(firms.map(f=>f.sector||'').filter(Boolean))].sort();}
+
+function buildWLSectFilters(){
+  document.getElementById('wl-sect-filters').innerHTML=getSectors().map(s=>`
+    <button class="wl-pill${wlActiveSecFilters.has(s)?' on':''}" onclick="toggleWLSect('${s}')">${s}</button>`).join('');
+}
+function toggleWLSect(s){wlActiveSecFilters.has(s)?wlActiveSecFilters.delete(s):wlActiveSecFilters.add(s);buildWLSectFilters();renderWL();}
+function toggleOnlyStar(){wlOnlyStar=!wlOnlyStar;if(wlOnlyStar)wlOnlyPtf=false;document.getElementById('btn-star').classList.toggle('on',wlOnlyStar);document.getElementById('btn-ptf').classList.remove('on');renderWL();}
+function toggleOnlyPtf(){wlOnlyPtf=!wlOnlyPtf;if(wlOnlyPtf)wlOnlyStar=false;document.getElementById('btn-ptf').classList.toggle('on',wlOnlyPtf);document.getElementById('btn-star').classList.remove('on');renderWL();}
+function resetWLFilters(){wlActiveSecFilters.clear();wlOnlyStar=false;wlOnlyPtf=false;document.getElementById('wlSearch').value='';document.getElementById('btn-star').classList.remove('on');document.getElementById('btn-ptf').classList.remove('on');wlSC=null;wlSD=1;buildWLSectFilters();renderWL();}
+function wlSort(col){if(wlSC===col)wlSD*=-1;else{wlSC=col;wlSD=1;}renderWL();}
+function toggleStar(t){starred.has(t)?starred.delete(t):starred.add(t);saveStarred();renderWL();}
+function wlEdit(idx){firms[idx]._editing=true;renderWL();}
+function wlCancelEdit(idx){delete firms[idx]._editing;renderWL();}
+function wlSaveEdit(idx){
+  const g=id=>document.getElementById(id+'_'+idx)?.value??'';
+  firms[idx].t=(g('we-t')||'').toUpperCase().trim();
+  firms[idx].n=g('we-n').trim();
+  firms[idx].sector=g('we-sector');
+  firms[idx].cat=g('we-cat');
+  firms[idx].layer=g('we-layer');
+  firms[idx].country=g('we-country');
+  firms[idx].verdict=g('we-verdict');
+  firms[idx].ptf=parseInt(g('we-ptf'))||0;
+  delete firms[idx]._editing;
+  saveAll();buildWLSectFilters();renderWL();
+}
+function wlDel(idx){if(!confirm(`Smazat ${firms[idx].t}?`))return;firms.splice(idx,1);saveAll();buildWLSectFilters();renderWL();}
+
+function verdictBadge(v){
+  const map={'Koupit':'background:var(--green-bg);color:var(--green);','Sledovat':'background:var(--amber-bg);color:var(--amber);','Čekat':'background:var(--amber-bg);color:var(--amber);','Prodat':'background:var(--red-bg);color:var(--red);'};
+  return`<span class="wbadge" style="${map[v]||'background:var(--surface2);color:var(--muted);'}">${v||'—'}</span>`;
+}
+
+function renderWL(){
+  if(currentView!=='watchlist')return;
+  buildWLSectFilters();
+  const q=(document.getElementById('wlSearch')?.value||'').toLowerCase();
+  let rows=firms.map((f,i)=>({...f,_i:i}));
+  if(wlOnlyStar)rows=rows.filter(f=>starred.has(f.t));
+  if(wlOnlyPtf)rows=rows.filter(f=>f.ptf);
+  if(wlActiveSecFilters.size)rows=rows.filter(f=>wlActiveSecFilters.has(f.sector||''));
+  if(q)rows=rows.filter(f=>f.t.toLowerCase().includes(q)||f.n.toLowerCase().includes(q)||(f.sector||'').toLowerCase().includes(q));
+  if(wlSC)rows.sort((a,b)=>{let va=a[wlSC]??'',vb=b[wlSC]??'';return va>vb?wlSD:va<vb?-wlSD:0;});
+
+  const ptfC=rows.filter(f=>f.ptf).length;
+  const starC=rows.filter(f=>starred.has(f.t)).length;
+  const kC=rows.filter(f=>f.verdict==='Koupit').length;
+  document.getElementById('wl-stats').innerHTML=`
+    <div class="wl-stat"><div class="wl-stat-l">Zobrazeno</div><div class="wl-stat-v">${rows.length}</div></div>
+    <div class="wl-stat"><div class="wl-stat-l">Celkem</div><div class="wl-stat-v">${firms.length}</div></div>
+    <div class="wl-stat"><div class="wl-stat-l">Sledované ⭐</div><div class="wl-stat-v" style="color:var(--amber);">${starC}</div></div>
+    <div class="wl-stat"><div class="wl-stat-l">Portfolio</div><div class="wl-stat-v" style="color:var(--green);">${ptfC}</div></div>
+    <div class="wl-stat"><div class="wl-stat-l">Koupit</div><div class="wl-stat-v" style="color:var(--green);">${kC}</div></div>`;
+
+  const layerOpts=layers.map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
+  const verdictOpts=['Koupit','Sledovat','Čekat','Prodat'].map(v=>`<option>${v}</option>`).join('');
+
+  document.getElementById('wl-tbody').innerHTML=rows.map(f=>{
+    const i=f._i;const isStar=starred.has(f.t);const col=layerColor(f.layer);const ms=scrData[f.t];
+    if(f._editing){
+      return`<tr class="editing"><td><button class="wstar${isStar?' on':''}" onclick="toggleStar('${f.t}')">★</button></td>
+        <td><input class="wei wei-xs" id="we-t_${i}" value="${f.t}"></td>
+        <td><input class="wei wei-xl" id="we-n_${i}" value="${f.n.replace(/"/g,'&quot;')}"></td>
+        <td><input class="wei wei-md" id="we-sector_${i}" value="${f.sector||''}"></td>
+        <td><input class="wei wei-md" id="we-cat_${i}" value="${f.cat||''}"></td>
+        <td><select class="wei" id="we-layer_${i}">${layers.map(l=>`<option value="${l.id}"${f.layer===l.id?' selected':''}>${l.name}</option>`).join('')}</select></td>
+        <td><input class="wei wei-sm" id="we-country_${i}" value="${f.country||''}"></td>
+        <td>${ms?.mosEst!=null?`<span style="color:${parseFloat(ms.mosEst)>0?'var(--green)':'var(--red)'};">${ms.mosEst>0?'+':''}${ms.mosEst} %</span>`:'—'}</td>
+        <td><select class="wei" id="we-verdict_${i}">${['Koupit','Sledovat','Čekat','Prodat'].map(v=>`<option${f.verdict===v?' selected':''}>${v}</option>`).join('')}</select></td>
+        <td style="white-space:nowrap;">
+          <select class="wei wei-xs" id="we-ptf_${i}"><option value="0"${!f.ptf?' selected':''}>Ne</option><option value="1"${f.ptf?' selected':''}>Ano</option></select>
+          <button class="waction-btn" onclick="wlSaveEdit(${i})" style="border-color:var(--green);color:var(--green);">✓</button>
+          <button class="waction-btn" onclick="wlCancelEdit(${i})">✕</button>
+        </td></tr>`;
+    }
+    return`<tr class="${isStar?'starred':''} ${selectedWLRow===f.t?'row-selected':''}" data-ticker="${f.t}" onclick="toggleWLRow('${f.t}')" style="cursor:pointer;">
+      <td><button class="wstar${isStar?' on':''}" onclick="event.stopPropagation();toggleStar('${f.t}')">★</button></td>
+      ${renderWLRow(f,i,isStar,col,ms)}
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════
+// ADD MODAL
+// ════════════════════════════════════════════════════
+function populateLayerSelect(){
+  const sel=document.getElementById('m-layer');
+  sel.innerHTML='<option value="">– nevybráno –</option>'+layers.map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
+}
+
+function openAddModal(editIdx=null){
+  modalEditIdx=editIdx;
+  const isEdit=editIdx!=null;const f=isEdit?firms[editIdx]:{};
+  document.getElementById('modal-h').textContent=isEdit?`Upravit ${f.t}`:'Přidat firmu';
+  document.getElementById('m-save').textContent=isEdit?'Uložit ✓':'Přidat ✓';
+  document.getElementById('m-t').value=f.t||'';
+  document.getElementById('m-n').value=f.n||'';
+  document.getElementById('m-sector').value=f.sector||'';
+  document.getElementById('m-cat').value=f.cat||'';
+  document.getElementById('m-country').value=f.country||'';
+  document.getElementById('m-desc').value=f.desc||'';
+  document.getElementById('m-verdict').value=f.verdict||'Sledovat';
+  document.getElementById('m-ptf').value=f.ptf||0;
+  populateLayerSelect();
+  document.getElementById('m-layer').value=f.layer||'';
+  // Links – tickery propojené s touto firmou
+  const myLinks=links.filter(([a,b])=>a===(f.t||'')||b===(f.t||'')).map(([a,b])=>a===(f.t||'')?b:a);
+  document.getElementById('m-links').value=myLinks.join(', ');
+  document.getElementById('m-err').textContent='';
+  document.getElementById('add-modal').style.display='flex';
+  setTimeout(()=>document.getElementById('m-t').focus(),50);
+}
+function closeAddModal(){document.getElementById('add-modal').style.display='none';modalEditIdx=null;}
+function saveModal(){
+  const t=(document.getElementById('m-t').value||'').toUpperCase().trim();
+  const n=document.getElementById('m-n').value.trim();
+  const err=document.getElementById('m-err');
+  if(!t||!n){err.textContent='Ticker a název jsou povinné.';return;}
+  if(modalEditIdx==null&&firms.find(f=>f.t===t)){err.textContent=`${t} je již v seznamu.`;return;}
+  const entry={
+    t,n,
+    sector:document.getElementById('m-sector').value.trim(),
+    cat:document.getElementById('m-cat').value.trim(),
+    layer:document.getElementById('m-layer').value,
+    country:document.getElementById('m-country').value.trim(),
+    desc:document.getElementById('m-desc').value.trim(),
+    verdict:document.getElementById('m-verdict').value,
+    ptf:parseInt(document.getElementById('m-ptf').value)||0,
+    starred:0
+  };
+  if(modalEditIdx!=null)Object.assign(firms[modalEditIdx],entry);
+  else firms.push(entry);
+  // Zpracuj propojení
+  const linkStr=document.getElementById('m-links').value;
+  const newLinks=linkStr.split(/[,;\s]+/).map(x=>x.toUpperCase().trim()).filter(x=>x&&x!==t);
+  // Odstraň staré links pro tento ticker
+  links=links.filter(([a,b])=>a!==t&&b!==t);
+  // Přidej nové
+  newLinks.forEach(x=>{if(firms.find(f=>f.t===x)||true)links.push([t,x]);});
+  saveAll();
+  closeAddModal();
+  buildWLSectFilters();renderWL();
+  if(mapInit){buildGraph();initSim();}
+}
+document.getElementById('add-modal').addEventListener('click',e=>{if(e.target===document.getElementById('add-modal'))closeAddModal();});
+
+// ════════════════════════════════════════════════════
+// LAYER EDITOR
+// ════════════════════════════════════════════════════
+function openLayerEditor(){
+  layerEditData=JSON.parse(JSON.stringify(layers));
+  renderLayerEditList();
+  document.getElementById('layer-modal').style.display='flex';
+}
+function closeLayerEditor(){document.getElementById('layer-modal').style.display='none';}
+function renderLayerEditList(){
+  document.getElementById('layer-edit-list').innerHTML=layerEditData.map((l,i)=>`
+    <div class="le-row">
+      <input type="color" class="le-color" value="${l.color}" id="lec-${i}" onchange="layerEditData[${i}].color=this.value">
+      <input class="le-name" value="${l.name}" id="len-${i}" onchange="layerEditData[${i}].name=this.value">
+      <input class="le-name" value="${l.id}" style="width:60px;" id="lei-${i}" placeholder="ID" onchange="layerEditData[${i}].id=this.value">
+      <button class="le-del" onclick="layerEditData.splice(${i},1);renderLayerEditList()">✕</button>
+    </div>`).join('');
+}
+function addLayer(){
+  layerEditData.push({id:'L'+(layerEditData.length+1),name:'Nová vrstva',color:'#888888'});
+  renderLayerEditList();
+}
+function saveLayerEditor(){
+  layers=layerEditData.map((l,i)=>{
+    const nameEl=document.getElementById('len-'+i);
+    const idEl=document.getElementById('lei-'+i);
+    const colEl=document.getElementById('lec-'+i);
+    return{id:idEl?.value||l.id,name:nameEl?.value||l.name,color:colEl?.value||l.color};
+  });
+  visibleLayers=new Set(layers.map(l=>l.id));
+  saveAll();closeLayerEditor();
+  renderLayerFilters();renderMapLegend();
+  if(mapInit){buildGraph();initSim();}
+}
+document.getElementById('layer-modal').addEventListener('click',e=>{if(e.target===document.getElementById('layer-modal'))closeLayerEditor();});
+
+// ════════════════════════════════════════════════════
+// MAP ENGINE
+// ════════════════════════════════════════════════════
+function getLinkedTickers(ticker){
+  return links.filter(([a,b])=>a===ticker||b===ticker).map(([a,b])=>a===ticker?b:a).filter((v,i,arr)=>arr.indexOf(v)===i);
+}
+
+function layerX(layerId){
+  const idx=layers.findIndex(l=>l.id===layerId);
+  if(idx<0)return 0.5;
+  return 0.1+idx*(0.8/Math.max(1,layers.length-1));
+}
+
+function nodeRadius(t){
+  const deg=links.filter(([a,b])=>a===t||b===t).length;
+  return Math.max(13,Math.min(28,13+deg*1.2));
+}
+
+function initMap(){
+  canvas=document.getElementById('mainCanvas');
+  ctx=canvas.getContext('2d');
+  resize();
+  window.addEventListener('resize',resize);
+  buildGraph();
+  initSim();
+  renderLayerFilters();
+  renderMapLegend();
+  updateFirmsList(null);
+  canvas.addEventListener('mousemove',onMouseMove);
+  canvas.addEventListener('mousedown',onMouseDown);
+  canvas.addEventListener('mouseup',onMouseUp);
+  canvas.addEventListener('click',onCanvasClick);
+  canvas.addEventListener('wheel',onWheel,{passive:false});
+  document.getElementById('fhKey').value=fhKey;
+  onFhKey(fhKey);
+}
+
+function resize(){
+  const wrap=document.getElementById('mapArea');
+  const dpr=window.devicePixelRatio||1;
+  W=wrap.clientWidth;H=wrap.clientHeight;
+  canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
+  canvas.style.width=W+'px';canvas.style.height=H+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  if(nodes.length)renderMap();
+}
+
+function buildGraph(){
+  nodes=firms.map(f=>{
+    const lx=layerX(f.layer)*W;
+    const ly=H/2;
+    const existing=nodes.find(n=>n.id===f.t);
+    return{id:f.t,x:existing?existing.x:lx+(Math.random()-.5)*100,y:existing?existing.y:ly+(Math.random()-.5)*(H*.55),vx:0,vy:0,firm:f,r:nodeRadius(f.t),visible:visibleLayers.has(f.layer)};
+  });
+  edges=links.map(([s,t])=>({source:s,target:t}));
+  document.getElementById('statNodes').textContent=nodes.filter(n=>n.visible).length;
+  document.getElementById('statEdges').textContent=edges.length;
+}
+
+function initSim(){alpha=1;if(simFrame)cancelAnimationFrame(simFrame);simFrame=requestAnimationFrame(simLoop);}
+function simLoop(){if(alpha>0.008){simulate();renderMap();alpha*=0.97;simFrame=requestAnimationFrame(simLoop);}else renderMap();}
+
+function simulate(){
+  const nm={};nodes.forEach(n=>nm[n.id]=n);
+  for(let i=0;i<nodes.length;i++){
+    if(!nodes[i].visible)continue;
+    for(let j=i+1;j<nodes.length;j++){
+      if(!nodes[j].visible)continue;
+      const a=nodes[i],b=nodes[j],dx=b.x-a.x,dy=b.y-a.y;
+      const d=Math.sqrt(dx*dx+dy*dy)||.01,mn=Math.max(a.r+b.r+18,52);
+      if(d<mn){const f=(mn-d)/d*.5;a.vx-=dx*f;a.vy-=dy*f;b.vx+=dx*f;b.vy+=dy*f;}
+    }
+  }
+  edges.forEach(e=>{
+    const a=nm[e.source],b=nm[e.target];
+    if(!a||!b||!a.visible||!b.visible)return;
+    const dx=b.x-a.x,dy=b.y-a.y,d=Math.sqrt(dx*dx+dy*dy)||.01,f=(d-120)/d*.06;
+    a.vx+=dx*f;a.vy+=dy*f;b.vx-=dx*f;b.vy-=dy*f;
+  });
+  nodes.forEach(n=>{
+    if(!n.visible)return;
+    n.vx+=(layerX(n.firm.layer)*W-n.x)*.04;
+    n.vy+=(H*.5-n.y)*.01;
+    n.x+=n.vx*alpha;n.y+=n.vy*alpha;
+    n.x=Math.max(n.r+5,Math.min(W-n.r-5,n.x));
+    n.y=Math.max(n.r+5,Math.min(H-n.r-5,n.y));
+  });
+}
+
+function resetLayout(){if(simFrame)cancelAnimationFrame(simFrame);nodes=[];buildGraph();initSim();}
+
+function renderMap(){
+  if(!ctx)return;
+  ctx.clearRect(0,0,W,H);
+  ctx.save();ctx.translate(pan.x,pan.y);ctx.scale(scale,scale);
+  const nm={};nodes.forEach(n=>nm[n.id]=n);
+  const conn=new Set();const focus=selected||hovered;
+  if(focus){conn.add(focus);links.forEach(([a,b])=>{if(a===focus)conn.add(b);if(b===focus)conn.add(a);});}
+  const hasSel=conn.size>0;
+  const COL_UP='#38bdf8',COL_DOWN='#fbbf24';
+
+  // Edges
+  edges.forEach(e=>{
+    const a=nm[e.source],b=nm[e.target];
+    if(!a||!b||!a.visible||!b.visible)return;
+    const ic=hasSel&&conn.has(e.source)&&conn.has(e.target);
+    const al=hasSel?(ic?.95:.03):.13;
+    ctx.beginPath();ctx.moveTo(a.x,a.y);
+    ctx.quadraticCurveTo((a.x+b.x)/2,(a.y+b.y)/2-14,b.x,b.y);
+    if(ic&&focus){
+      const isDown=e.source===focus;
+      ctx.strokeStyle=(isDown?COL_DOWN:COL_UP)+'dd';ctx.lineWidth=2.5;
+    }else if(ic){
+      const g=ctx.createLinearGradient(a.x,a.y,b.x,b.y);
+      g.addColorStop(0,layerColor(a.firm.layer)+'cc');g.addColorStop(1,layerColor(b.firm.layer)+'cc');
+      ctx.strokeStyle=g;ctx.lineWidth=2;
+    }else{ctx.strokeStyle=`rgba(150,150,150,${al})`;ctx.lineWidth=1;}
+    ctx.stroke();
+    if(ic){
+      const isDown=focus?e.source===focus:true;
+      const ac=focus?(isDown?COL_DOWN:COL_UP):layerColor(b.firm.layer)+'cc';
+      const ang=Math.atan2(b.y-a.y,b.x-a.x);
+      const ax2=b.x-Math.cos(ang)*(b.r+3),ay2=b.y-Math.sin(ang)*(b.r+3);
+      ctx.beginPath();ctx.moveTo(ax2,ay2);ctx.lineTo(ax2-6*Math.cos(ang-.4),ay2-6*Math.sin(ang-.4));ctx.lineTo(ax2-6*Math.cos(ang+.4),ay2-6*Math.sin(ang+.4));ctx.closePath();ctx.fillStyle=ac;ctx.fill();
+    }
+  });
+
+  // Nodes
+  nodes.forEach(n=>{
+    if(!n.visible)return;
+    const isSel=n.id===selected,isHov=n.id===hovered,ic=hasSel&&conn.has(n.id),dim=hasSel&&!ic;
+    const col=layerColor(n.firm.layer);
+    ctx.globalAlpha=dim?.1:1;
+    if(isSel||isHov){ctx.beginPath();ctx.arc(n.x,n.y,n.r+11,0,Math.PI*2);const g=ctx.createRadialGradient(n.x,n.y,n.r,n.x,n.y,n.r+11);g.addColorStop(0,col+'55');g.addColorStop(1,col+'00');ctx.fillStyle=g;ctx.fill();}
+    ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,Math.PI*2);
+    if(isSel){ctx.fillStyle=col;ctx.strokeStyle='#fff';ctx.lineWidth=2;}
+    else if(ic){ctx.fillStyle=col+'99';ctx.strokeStyle=col+'cc';ctx.lineWidth=1.5;}
+    else{ctx.fillStyle=col+'60';ctx.strokeStyle=col+'80';ctx.lineWidth=1;}
+    ctx.fill();ctx.stroke();
+    ctx.globalAlpha=dim?.1:1;
+    const fs=Math.max(8,Math.min(11,n.r*.65));
+    ctx.fillStyle=dim?'rgba(150,150,150,.2)':'#fff';
+    ctx.font=`500 ${fs}px 'DM Sans',sans-serif`;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(n.id,n.x,n.y);
+    ctx.globalAlpha=1;
+  });
+  ctx.restore();
+}
+
+function getNodeAt(mx,my){
+  const wx=(mx-pan.x)/scale,wy=(my-pan.y)/scale;
+  for(let i=nodes.length-1;i>=0;i--){const n=nodes[i];if(n.visible&&Math.sqrt((wx-n.x)**2+(wy-n.y)**2)<=n.r+4)return n;}
+  return null;
+}
+
+function onMouseMove(e){
+  const rect=canvas.getBoundingClientRect();
+  const mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  if(isDragging){pan.x=dragStart.x+(e.clientX-dragStart.ox);pan.y=dragStart.y+(e.clientY-dragStart.oy);renderMap();return;}
+  const n=getNodeAt(mx,my),prev=hovered;hovered=n?n.id:null;
+  const tt=document.getElementById('mapTT');
+  if(n){
+    canvas.style.cursor='pointer';
+    tt.innerHTML=`<strong style="color:${layerColor(n.firm.layer)};">${n.id}</strong> ${n.firm.n}<br><span style="font-size:10px;color:var(--muted);">${n.firm.sector||''} · ${layerById(n.firm.layer).name}</span>`;
+    tt.style.left=(mx+12)+'px';tt.style.top=(my-28)+'px';tt.style.opacity='1';
+  }else{canvas.style.cursor='grab';tt.style.opacity='0';}
+  if(prev!==hovered)renderMap();
+}
+function onMouseDown(e){isDragging=true;dragStart={x:pan.x,y:pan.y,ox:e.clientX,oy:e.clientY};canvas.style.cursor='grabbing';}
+function onMouseUp(){isDragging=false;canvas.style.cursor='grab';}
+function onCanvasClick(e){
+  if(Math.abs(e.clientX-dragStart.ox)>5||Math.abs(e.clientY-dragStart.oy)>5)return;
+  const rect=canvas.getBoundingClientRect();
+  const n=getNodeAt(e.clientX-rect.left,e.clientY-rect.top);
+  if(n){if(selected===n.id){selected=null;clearDetail();updateFirmsList(null);}else{selected=n.id;showDetail(n.id);updateFirmsList(n.id);}}
+  else{selected=null;clearDetail();updateFirmsList(null);}
+  renderMap();renderLayerFilters();
+}
+function onWheel(e){
+  e.preventDefault();
+  const rect=canvas.getBoundingClientRect(),mx=e.clientX-rect.left,my=e.clientY-rect.top;
+  const ns=Math.max(.25,Math.min(3,scale*(e.deltaY>0?.9:1.1)));
+  pan.x=mx-(mx-pan.x)*(ns/scale);pan.y=my-(my-pan.y)*(ns/scale);scale=ns;renderMap();
+}
+
+function selectNode(ticker){
+  selected=ticker;showDetail(ticker);updateFirmsList(ticker);
+  const n=nodes.find(x=>x.id===ticker);
+  if(n){pan.x=W/2-n.x*scale;pan.y=H/2-n.y*scale;}
+  renderMap();renderLayerFilters();
+}
+
+function clearSelection(){selected=null;clearDetail();updateFirmsList(null);renderMap();renderLayerFilters();}
+
+// ════════════════════════════════════════════════════
+// LEFT PANEL
+// ════════════════════════════════════════════════════
+function renderLayerFilters(){
+  document.getElementById('layer-filters').innerHTML=layers.map(l=>{
+    const on=visibleLayers.has(l.id);
+    const cnt=firms.filter(f=>f.layer===l.id).length;
+    return`<div class="layer-item${on?' on':''}" onclick="toggleLayer('${l.id}')" style="border-color:${on?l.color+'44':'transparent'}">
+      <div class="layer-dot" style="background:${l.color};opacity:${on?1:.3};"></div>
+      <span class="layer-lbl" style="color:${on?'var(--text)':'var(--muted)'};">${l.name}</span>
+      <span class="layer-cnt">${cnt}</span>
+    </div>`;
+  }).join('');
+}
+
+function toggleLayer(id){
+  if(visibleLayers.has(id)){if(visibleLayers.size>1)visibleLayers.delete(id);}else visibleLayers.add(id);
+  nodes.forEach(n=>{n.visible=visibleLayers.has(n.firm.layer);});
+  renderMap();renderLayerFilters();renderMapLegend();
+  document.getElementById('statNodes').textContent=nodes.filter(n=>n.visible).length;
+}
+
+function updateFirmsList(ticker){
+  const el=document.getElementById('firms-list');
+  const hdr=document.getElementById('firms-hdr-txt');
+  const clearBtn=document.getElementById('btn-clear-sel');
+  const legend=document.getElementById('dir-legend');
+  if(!ticker){
+    hdr.textContent='Firmy';
+    clearBtn.style.display='none';
+    legend.style.display='none';
+    el.innerHTML=`<div class="firms-empty">Klikni na ticker v mapě<br>pro zobrazení propojených firem</div>`;
+    return;
+  }
+  clearBtn.style.display='block';
+  legend.style.display='flex';
+  const upstream=links.filter(([a,b])=>b===ticker).map(([a])=>a);
+  const downstream=links.filter(([a,b])=>a===ticker).map(([,b])=>b);
+  const linked=[...new Set([...upstream,...downstream])];
+  hdr.textContent=`${ticker} (${linked.length})`;
+  const all=[ticker,...linked];
+  el.innerHTML=all.map((t,idx)=>{
+    const f=firmByTicker(t);if(!f)return'';
+    const col=layerColor(f.layer),isSel=selected===t,isFirst=idx===0;
+    let dir='',dc='';
+    if(!isFirst){
+      const isDown=downstream.includes(t),isUp=upstream.includes(t);
+      if(isDown&&isUp){dir='⇄';dc='var(--muted)';}
+      else if(isDown){dir='↓';dc='var(--amber)';}
+      else{dir='↑';dc='#38bdf8';}
+    }
+    return`<div class="fi${isSel?' sel':''}${isFirst?' hl':''}" onclick="selectNode('${t}')" style="${isFirst?`border-left:2px solid ${col};background:${col}12;`:''}">
+      <div class="fi-t" style="color:${col};">${t}</div>
+      <div class="fi-n">${f.n}</div>
+      ${dir?`<span class="fi-dir" style="color:${dc};" title="${isFirst?'':''}"> ${dir}</span>`:''}
+    </div>`;
+  }).join('');
+}
+
+function renderMapLegend(){
+  document.getElementById('mapLegend').innerHTML=layers.map(l=>`
+    <div class="ml-item" onclick="toggleLayer('${l.id}')">
+      <div class="ml-dot" style="background:${l.color};opacity:${visibleLayers.has(l.id)?1:.3};"></div>
+      <span style="opacity:${visibleLayers.has(l.id)?1:.4};">${l.name}</span>
+    </div>`).join('');
+}
+
+function onMapSearch(val){
+  const q=val.trim().toLowerCase();
+  if(q)nodes.forEach(n=>{n.visible=visibleLayers.has(n.firm.layer)&&(n.id.toLowerCase().includes(q)||n.firm.n.toLowerCase().includes(q)||n.firm.sector?.toLowerCase().includes(q));});
+  else nodes.forEach(n=>{n.visible=visibleLayers.has(n.firm.layer);});
+  renderMap();
+  document.getElementById('statNodes').textContent=nodes.filter(n=>n.visible).length;
+}
+
+
+// ════════════════════════════════════════════════════
+// DRAG & DROP SLOUPCE WATCHLISTU
+// ════════════════════════════════════════════════════
+// Pořadí sloupců uložené v localStorage
+const WL_COL_SK = 'smg_wl_cols_v2';
+const WL_COL_DEFAULT = ['map','t','n','sector','layer','country','score','verdict','action'];
+// Načti uložené pořadí, ale validuj – musí obsahovat všechny sloupce z DEFAULT
+function loadColOrder(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(WL_COL_SK)||'null');
+    if(!saved) return [...WL_COL_DEFAULT];
+    // Přidej chybějící sloupce na konec (před action)
+    const missing = WL_COL_DEFAULT.filter(c=>!saved.includes(c));
+    if(missing.length){
+      const ai = saved.indexOf('action');
+      if(ai>=0) saved.splice(ai,0,...missing);
+      else saved.push(...missing);
+    }
+    // Odstraň neznámé sloupce
+    return saved.filter(c=>WL_COL_DEFAULT.includes(c));
+  }catch(e){return [...WL_COL_DEFAULT];}
+}
+let wlColOrder = loadColOrder();
+
+let dragSrcCol = null;
+
+function initColDrag(){
+  const row = document.getElementById('wl-thead-row');
+  if(!row) return;
+  // Seřaď th podle uloženého pořadí
+  applyColOrder();
+  // Přidej drag listenery
+  row.querySelectorAll('th[data-col]').forEach(th=>{
+    if(!th.classList.contains('draggable')) return;
+    th.addEventListener('dragstart', e=>{
+      dragSrcCol = th.dataset.col;
+      th.classList.add('dragging');
+      e.dataTransfer.effectAllowed='move';
+    });
+    th.addEventListener('dragend', e=>{
+      th.classList.remove('dragging');
+      document.querySelectorAll('.wl-tbl th').forEach(t=>t.classList.remove('drag-over'));
+    });
+    th.addEventListener('dragover', e=>{
+      e.preventDefault();
+      e.dataTransfer.dropEffect='move';
+      document.querySelectorAll('.wl-tbl th').forEach(t=>t.classList.remove('drag-over'));
+      th.classList.add('drag-over');
+    });
+    th.addEventListener('dragleave', ()=>th.classList.remove('drag-over'));
+    th.addEventListener('drop', e=>{
+      e.preventDefault();
+      const destCol = th.dataset.col;
+      if(!dragSrcCol || dragSrcCol === destCol) return;
+      // Přehoď v pořadí
+      const si = wlColOrder.indexOf(dragSrcCol);
+      const di = wlColOrder.indexOf(destCol);
+      if(si>=0 && di>=0){
+        wlColOrder.splice(si,1);
+        wlColOrder.splice(di,0,dragSrcCol);
+        localStorage.setItem(WL_COL_SK, JSON.stringify(wlColOrder));
+        applyColOrder();
+        renderWL(); // překresli řádky ve stejném pořadí
+      }
+      dragSrcCol=null;
+      document.querySelectorAll('.wl-tbl th').forEach(t=>t.classList.remove('drag-over'));
+    });
+  });
+}
+
+function applyColOrder(){
+  const row = document.getElementById('wl-thead-row');
+  if(!row) return;
+  // Zachovej první (hvězdička – pevný)
+  const fixed = row.querySelector('th:not([data-col])') || row.children[0];
+  // Seřaď ostatní
+  wlColOrder.forEach(col=>{
+    const th = row.querySelector(`th[data-col="${col}"]`);
+    if(th) row.appendChild(th);
+  });
+}
+
+function getColOrder(){
+  // Vrátí aktuální pořadí data-col hodnot (bez pevných)
+  return wlColOrder;
+}
+
+function renderWLRow(f, i, isStar, col, ms){
+  // Sestaví TD buňky podle aktuálního pořadí sloupců
+  const cellMap = {
+    'map': `<td style="text-align:center;"><button class="wmap-icon-btn" onclick="event.stopPropagation();showInMap('${f.t}')" title="Zobrazit v mapě">🗺</button></td>`,
+    't': `<td><a class="wtl" href="https://stockanalysis.com/stocks/${f.t}/" target="_blank">${f.t}</a>${f.ptf?` <span style="font-size:8px;background:var(--green-bg);color:var(--green);border-radius:3px;padding:1px 3px;">ptf</span>`:''}</td>`,
+    'n': `<td style="font-size:11px;">${f.n}</td>`,
+    'sector': `<td><span class="wbadge" style="background:var(--surface2);color:var(--muted);">${f.sector||'—'}</span></td>`,
+    'layer': `<td><span class="wbadge" style="background:${col}18;color:${col};border:.5px solid ${col}44;">${f.cat||'—'}</span></td>`,
+    'country': `<td style="font-size:11px;color:var(--muted);">${f.country||'—'}</td>`,
+    'score': `<td style="font-family:'Space Mono',monospace;font-size:11px;color:${ms?.mosEst>0?'var(--green)':ms?.mosEst<0?'var(--red)':'var(--muted)'};">${ms?.mosEst!=null?(parseFloat(ms.mosEst)>0?'+':'')+ms.mosEst+' %':'—'}</td>`,
+    'verdict': `<td>${verdictBadge(f.verdict)}</td>`,
+    'action': `<td style="white-space:nowrap;">
+      <button class="waction-btn" onclick="event.stopPropagation();wlEdit(${i})">✎</button>
+      <button class="waction-btn del" onclick="event.stopPropagation();wlDel(${i})" style="margin-left:2px;">✕</button>
+    </td>`,
+  };
+  return wlColOrder.map(col2=>cellMap[col2]||'').join('');
+}
+
+// ════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════
+loadAll();
+switchView('map');
+</script>
+</body>
+</html>
