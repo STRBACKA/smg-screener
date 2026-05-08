@@ -1,6 +1,4 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
+<html lang="cs"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>SMG Screener</title>
@@ -255,34 +253,52 @@ body{font-family:-apple-system,'DM Sans',sans-serif;background:var(--bg);color:v
     <button class="tb-btn" style="border-color:rgba(24,95,165,.4);color:var(--accent);" onclick="openAddModal()">+ Přidat</button>
   </div>
   <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
-    <input type="password" class="tb-input" id="fhKey" placeholder="Finnhub API…" style="width:105px;" onchange="onFhKey(this.value)" onpaste="setTimeout(()=>onFhKey(this.value),50)">
-    <span id="fhStatus" style="font-size:9px;font-family:'Space Mono',monospace;color:var(--muted);white-space:nowrap;"></span>
+    <input type="password" class="tb-input" id="fhKey" placeholder="Finnhub API…" style="width:105px;" onchange="onFhKey(this.value)" onpaste="setTimeout(()=&gt;onFhKey(this.value),50)">
+    <span id="fhStatus" style="font-size: 9px; font-family: &quot;Space Mono&quot;, monospace; color: var(--green); white-space: nowrap;">✓ Finnhub</span>
     <div class="tb-sep"></div>
-    <input type="password" class="tb-input" id="ghToken" placeholder="GitHub Token…" style="width:110px;" onchange="onGhToken(this.value)" onpaste="setTimeout(()=>onGhToken(this.value),50)">
-    <button class="tb-btn" id="gh-publish-btn" onclick="publishToGitHub()" title="Publikovat aktuální verzi na GitHub Pages">↑ Publikovat</button>
-    <span id="ghStatus" style="font-size:9px;font-family:'Space Mono',monospace;color:var(--muted);white-space:nowrap;"></span>
+    <input type="password" class="tb-input" id="ghToken" placeholder="GitHub Token…" style="width:110px;" onchange="onGhToken(this.value)" onpaste="setTimeout(()=&gt;onGhToken(this.value),50)">
+    <button class="tb-btn" id="gh-publish-btn" onclick="publishToGitHub()" title="Publikovat aktuální verzi na GitHub Pages" style="border-color: var(--green); color: var(--green);" disabled="">↑ Nahrávám…</button>
+    <span id="ghStatus" style="font-size: 9px; font-family: &quot;Space Mono&quot;, monospace; color: var(--green); white-space: nowrap;"></span>
   </div>
 </div>
 
 <div class="app-body">
 
 <!-- LEFT PANEL -->
-<div class="left-panel" id="left-panel">
+<div class="left-panel" id="left-panel" style="display: flex;">
   <div class="lp-sect">
     <div class="lp-tit">Vrstvy supply chain</div>
-    <div id="layer-filters"></div>
+    <div id="layer-filters"><div class="layer-item on" onclick="toggleLayer('L1')" style="border-color:#10b98144">
+      <div class="layer-dot" style="background:#10b981;opacity:1;"></div>
+      <span class="layer-lbl" style="color:var(--text);">Suroviny</span>
+      <span class="layer-cnt">3</span>
+    </div><div class="layer-item on" onclick="toggleLayer('L2')" style="border-color:#38bdf844">
+      <div class="layer-dot" style="background:#38bdf8;opacity:1;"></div>
+      <span class="layer-lbl" style="color:var(--text);">Komponenty</span>
+      <span class="layer-cnt">7</span>
+    </div><div class="layer-item on" onclick="toggleLayer('L3')" style="border-color:#a78bfa44">
+      <div class="layer-dot" style="background:#a78bfa;opacity:1;"></div>
+      <span class="layer-lbl" style="color:var(--text);">Výroba</span>
+      <span class="layer-cnt">7</span>
+    </div><div class="layer-item on" onclick="toggleLayer('L4')" style="border-color:#fbbf2444">
+      <div class="layer-dot" style="background:#fbbf24;opacity:1;"></div>
+      <span class="layer-lbl" style="color:var(--text);">Distribuce</span>
+      <span class="layer-cnt">2</span>
+    </div><div class="layer-item on" onclick="toggleLayer('L5')" style="border-color:#f8717144">
+      <div class="layer-dot" style="background:#f87171;opacity:1;"></div>
+      <span class="layer-lbl" style="color:var(--text);">Konečný produkt</span>
+      <span class="layer-cnt">5</span>
+    </div></div>
   </div>
   <div class="firms-hdr">
     <span class="firms-hdr-txt" id="firms-hdr-txt">Firmy</span>
     <button id="btn-clear-sel" onclick="clearSelection()" style="display:none;font-size:9px;padding:2px 6px;border-radius:var(--r);border:.5px solid var(--border2);background:var(--red-bg);color:var(--red);cursor:pointer;">✕ Zrušit</button>
   </div>
-  <div class="dir-legend" id="dir-legend">
+  <div class="dir-legend" id="dir-legend" style="display: none;">
     <span style="font-size:10px;color:var(--info);display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:14px;height:2px;background:#38bdf8;border-radius:1px;"></span>↑ Dodavatel</span>
     <span style="font-size:10px;color:var(--amber);display:flex;align-items:center;gap:3px;"><span style="display:inline-block;width:14px;height:2px;background:#fbbf24;border-radius:1px;"></span>↓ Odběratel</span>
   </div>
-  <div class="firms-list" id="firms-list">
-    <div class="firms-empty">Klikni na ticker v mapě pro zobrazení propojených firem</div>
-  </div>
+  <div class="firms-list" id="firms-list"><div class="firms-empty">Klikni na ticker v mapě<br>pro zobrazení propojených firem</div></div>
 </div>
 
 <!-- CENTER -->
@@ -291,12 +307,32 @@ body{font-family:-apple-system,'DM Sans',sans-serif;background:var(--bg);color:v
   <!-- MAP VIEW -->
   <div id="map-view" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
     <div class="map-area" id="mapArea">
-      <canvas id="mainCanvas"></canvas>
-      <div class="map-tt" id="mapTT"></div>
-      <div class="map-legend" id="mapLegend"></div>
+      <canvas id="mainCanvas" width="3996" height="1310" style="width: 1998px; height: 655px; cursor: grab;"></canvas>
+      <div class="map-tt" id="mapTT" style="opacity: 0; left: 1271px; top: 219px;"><strong style="color:#fbbf24;">UPS</strong> UPS<br><span style="font-size:10px;color:var(--muted);">Logistika · Distribuce</span></div>
+      <div class="map-legend" id="mapLegend">
+    <div class="ml-item" onclick="toggleLayer('L1')">
+      <div class="ml-dot" style="background:#10b981;opacity:1;"></div>
+      <span style="opacity:1;">Suroviny</span>
+    </div>
+    <div class="ml-item" onclick="toggleLayer('L2')">
+      <div class="ml-dot" style="background:#38bdf8;opacity:1;"></div>
+      <span style="opacity:1;">Komponenty</span>
+    </div>
+    <div class="ml-item" onclick="toggleLayer('L3')">
+      <div class="ml-dot" style="background:#a78bfa;opacity:1;"></div>
+      <span style="opacity:1;">Výroba</span>
+    </div>
+    <div class="ml-item" onclick="toggleLayer('L4')">
+      <div class="ml-dot" style="background:#fbbf24;opacity:1;"></div>
+      <span style="opacity:1;">Distribuce</span>
+    </div>
+    <div class="ml-item" onclick="toggleLayer('L5')">
+      <div class="ml-dot" style="background:#f87171;opacity:1;"></div>
+      <span style="opacity:1;">Konečný produkt</span>
+    </div></div>
       <div class="map-stats">
-        <div class="ms"><span id="statNodes">0</span> firem</div>
-        <div class="ms"><span id="statEdges">0</span> vazeb</div>
+        <div class="ms"><span id="statNodes">24</span> firem</div>
+        <div class="ms"><span id="statEdges">38</span> vazeb</div>
       </div>
     </div>
     <div class="bottom-area">
@@ -329,13 +365,13 @@ body{font-family:-apple-system,'DM Sans',sans-serif;background:var(--bg);color:v
         <thead><tr id="wl-thead-row">
           <th style="width:22px;"></th>
           <th class="draggable" data-col="map" draggable="true" style="width:36px;text-align:center;">🗺</th>
-          <th class="draggable" data-col="t"      draggable="true" onclick="wlSort('t')">Ticker ↕</th>
-          <th class="draggable" data-col="n"      draggable="true" onclick="wlSort('n')">Společnost ↕</th>
+          <th class="draggable" data-col="t" draggable="true" onclick="wlSort('t')">Ticker ↕</th>
+          <th class="draggable" data-col="n" draggable="true" onclick="wlSort('n')">Společnost ↕</th>
           <th class="draggable" data-col="sector" draggable="true" onclick="wlSort('sector')">Sektor ↕</th>
-          <th class="draggable" data-col="layer"  draggable="true" onclick="wlSort('layer')">Vrstva ↕</th>
-          <th class="draggable" data-col="country"draggable="true" onclick="wlSort('country')">Země ↕</th>
-          <th class="draggable" data-col="score"  draggable="true" onclick="wlSort('score')">Skóre ↕</th>
-          <th class="draggable" data-col="verdict"draggable="true" onclick="wlSort('verdict')">Verdikt ↕</th>
+          <th class="draggable" data-col="layer" draggable="true" onclick="wlSort('layer')">Vrstva ↕</th>
+          <th class="draggable" data-col="country" draggable="true" onclick="wlSort('country')">Země ↕</th>
+          <th class="draggable" data-col="score" draggable="true" onclick="wlSort('score')">Skóre ↕</th>
+          <th class="draggable" data-col="verdict" draggable="true" onclick="wlSort('verdict')">Verdikt ↕</th>
           <th data-col="action">Akce</th>
         </tr></thead>
         <tbody id="wl-tbody"></tbody>
@@ -367,7 +403,7 @@ body{font-family:-apple-system,'DM Sans',sans-serif;background:var(--bg);color:v
       </div>
       <div class="mff"><span class="mfl">Země výroby</span><input class="mfi" id="m-country" placeholder="USA"></div>
       <div class="mff"><span class="mfl">Verdikt</span>
-        <select class="mfi" id="m-verdict"><option>Koupit</option><option selected>Sledovat</option><option>Čekat</option><option>Prodat</option></select>
+        <select class="mfi" id="m-verdict"><option>Koupit</option><option selected="">Sledovat</option><option>Čekat</option><option>Prodat</option></select>
       </div>
       <div class="mff"><span class="mfl">Portfolio</span>
         <select class="mfi" id="m-ptf"><option value="0">Ne</option><option value="1">Ano</option></select>
@@ -1622,5 +1658,6 @@ document.getElementById('fhKey').value=fhKey;
 onFhKey(fhKey);
 if(ghToken){document.getElementById('ghToken').value=ghToken;onGhToken(ghToken);}
 </script>
-</body>
-</html>
+
+
+</body></html>
