@@ -235,7 +235,7 @@ body{font-family:-apple-system,'DM Sans',sans-serif;background:var(--bg);color:v
 <!-- ══ TOOLBAR ══ -->
 <div class="toolbar">
   <div class="tb-brand">SMG SCREENER</div>
-  <span class="tb-version" style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);border:.5px solid var(--border2);border-radius:var(--r);padding:2px 6px;">v1.02</span>
+  <span class="tb-version" style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);border:.5px solid var(--border2);border-radius:var(--r);padding:2px 6px;">v1.10</span>
   <div class="tb-views">
     <button class="tv-btn on" id="vb-map" onclick="switchView('map')">🗺 Mapa</button>
     <button class="tv-btn" id="vb-wl" onclick="switchView('watchlist')">📋 Watchlist</button>
@@ -258,11 +258,6 @@ body{font-family:-apple-system,'DM Sans',sans-serif;background:var(--bg);color:v
   <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
     <input type="password" class="tb-input" id="fhKey" placeholder="Finnhub API…" style="width:105px;" onchange="onFhKey(this.value)" onpaste="setTimeout(()=>onFhKey(this.value),50)">
     <span id="fhStatus" style="font-size:9px;font-family:'Space Mono',monospace;color:var(--muted);white-space:nowrap;"></span>
-    <div class="tb-sep"></div>
-    <input type="password" class="tb-input" id="ghToken" placeholder="GitHub Token…" style="width:110px;" onchange="onGhToken(this.value)" onpaste="setTimeout(()=>onGhToken(this.value),50)">
-    <input type="file" id="gh-file-input" accept=".html" style="display:none;" onchange="onFileSelected(this)">
-    <button class="tb-btn" id="gh-publish-btn" onclick="selectAndPublish()" title="Vyber soubor a publikuj na GitHub Pages">↑ Publikovat</button>
-    <span id="ghStatus" style="font-size:9px;font-family:'Space Mono',monospace;color:var(--muted);white-space:nowrap;"></span>
   </div>
 </div>
 
@@ -412,6 +407,13 @@ const SK_SCR     = 'smg_scr_v1';    // screening data (bod 5 – manuální)
 const SK_FHK     = 'smg_fhk';
 
 // ════════════════════════════════════════════════════
+// CLEANUP – odstranění starého GitHub tokenu (v1.10)
+// ════════════════════════════════════════════════════
+// Publishing přes API byl nahrazen git workflow v Codespace.
+// Token už není potřeba a tímto se z prohlížeče odstraní.
+try{ localStorage.removeItem('smg_ght'); }catch(e){}
+
+// ════════════════════════════════════════════════════
 // DEFAULT DATA – semiconductor supply chain
 // ════════════════════════════════════════════════════
 const DEFAULT_LAYERS = [
@@ -551,93 +553,6 @@ function onFhKey(v){
   el.textContent=fhKey?'✓ Finnhub':'Yahoo';
   el.style.color=fhKey?'var(--green)':'var(--muted)';
 }
-
-// ════════════════════════════════════════════════════
-// GITHUB PUBLISH
-// ════════════════════════════════════════════════════
-const SK_GHT = 'smg_ght';
-let ghToken = localStorage.getItem(SK_GHT)||'';
-
-function onGhToken(v){
-  ghToken=v.trim();
-  if(ghToken)localStorage.setItem(SK_GHT,ghToken);
-  else localStorage.removeItem(SK_GHT);
-  const el=document.getElementById('ghStatus');
-  el.textContent=ghToken?'✓ Token uložen':'';
-  el.style.color='var(--green)';
-  document.getElementById('gh-publish-btn').style.borderColor=ghToken?'var(--green)':'';
-  document.getElementById('gh-publish-btn').style.color=ghToken?'var(--green)':'';
-}
-
-function selectAndPublish(){
-  if(!ghToken){
-    alert('Zadej GitHub Personal Access Token.');
-    return;
-  }
-  document.getElementById('gh-file-input').click();
-}
-
-function onFileSelected(input){
-  const file=input.files[0];
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=async e=>{
-    const html=e.target.result;
-    await publishToGitHub(html);
-  };
-  reader.readAsText(file);
-  input.value=''; // reset pro příští použití
-}
-
-async function publishToGitHub(html){
-  const btn=document.getElementById('gh-publish-btn');
-  const status=document.getElementById('ghStatus');
-  btn.textContent='↑ Nahrávám…';
-  btn.disabled=true;
-  status.textContent='';
-  try{
-    const owner='strbacka';
-    const repo='smg-screener';
-    const path='index.html';
-    const apiBase=`https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-    const headers={'Authorization':`Bearer ${ghToken}`,'Content-Type':'application/json','Accept':'application/vnd.github+json'};
-
-    // Zakóduj soubor do base64
-    const encoded=btoa(unescape(encodeURIComponent(html)));
-
-    // Získej SHA existujícího souboru
-    let sha=null;
-    try{
-      const getR=await fetch(apiBase,{headers});
-      if(getR.ok){const d=await getR.json();sha=d.sha;}
-    }catch(e){}
-
-    // Push na GitHub
-    const body={
-      message:`SMG Screener update – ${new Date().toLocaleString('cs-CZ')}`,
-      content:encoded,
-      branch:'main',
-    };
-    if(sha) body.sha=sha;
-
-    const putR=await fetch(apiBase,{method:'PUT',headers,body:JSON.stringify(body)});
-    if(putR.ok){
-      status.textContent='✓ Publikováno!';
-      status.style.color='var(--green)';
-      btn.textContent='↑ Publikovat';
-      setTimeout(()=>{status.textContent='';},5000);
-    }else{
-      const err=await putR.json();
-      throw new Error(err.message||putR.status);
-    }
-  }catch(e){
-    status.textContent='✗ Chyba: '+e.message;
-    status.style.color='var(--red)';
-    btn.textContent='↑ Publikovat';
-  }
-  btn.disabled=false;
-}
-
 
 async function fhGet(endpoint){
   if(!fhKey)return null;
@@ -1633,10 +1548,9 @@ function renderWLRow(f, i, isStar, col, ms){
 // ════════════════════════════════════════════════════
 loadAll();
 switchView('map');
-// Načti uložené tokeny
+// Načti uložený Finnhub klíč
 document.getElementById('fhKey').value=fhKey;
 onFhKey(fhKey);
-if(ghToken){document.getElementById('ghToken').value=ghToken;onGhToken(ghToken);}
 </script>
 </body>
 </html>
