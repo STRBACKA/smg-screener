@@ -257,7 +257,7 @@ body{font-family:-apple-system,'DM Sans',sans-serif;background:var(--bg);color:v
     <span id="fhStatus" style="font-size: 9px; font-family: &quot;Space Mono&quot;, monospace; color: var(--green); white-space: nowrap;">✓ Finnhub</span>
     <div class="tb-sep"></div>
     <input type="password" class="tb-input" id="ghToken" placeholder="GitHub Token…" style="width:110px;" onchange="onGhToken(this.value)" onpaste="setTimeout(()=&gt;onGhToken(this.value),50)">
-    <button class="tb-btn" id="gh-publish-btn" onclick="publishToGitHub()" title="Publikovat aktuální verzi na GitHub Pages" style="border-color: var(--green); color: var(--green);" disabled="">↑ Nahrávám…</button>
+    <button class="tb-btn" id="gh-publish-btn" onclick="publishToGitHub()" title="Publikovat aktuální verzi na GitHub Pages" disabled="" style="border-color: var(--green); color: var(--green);">↑ Nahrávám…</button>
     <span id="ghStatus" style="font-size: 9px; font-family: &quot;Space Mono&quot;, monospace; color: var(--green); white-space: nowrap;"></span>
   </div>
 </div>
@@ -308,7 +308,7 @@ body{font-family:-apple-system,'DM Sans',sans-serif;background:var(--bg);color:v
   <div id="map-view" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
     <div class="map-area" id="mapArea">
       <canvas id="mainCanvas" width="3996" height="1310" style="width: 1998px; height: 655px; cursor: grab;"></canvas>
-      <div class="map-tt" id="mapTT" style="opacity: 0; left: 1271px; top: 219px;"><strong style="color:#fbbf24;">UPS</strong> UPS<br><span style="font-size:10px;color:var(--muted);">Logistika · Distribuce</span></div>
+      <div class="map-tt" id="mapTT" style="opacity: 0; left: 847px; top: 152px;"><strong style="color:#38bdf8;">SNPS</strong> Synopsys<br><span style="font-size:10px;color:var(--muted);">Software · Komponenty</span></div>
       <div class="map-legend" id="mapLegend">
     <div class="ml-item" onclick="toggleLayer('L1')">
       <div class="ml-dot" style="background:#10b981;opacity:1;"></div>
