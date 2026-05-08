@@ -235,7 +235,7 @@ body{font-family:-apple-system,'DM Sans',sans-serif;background:var(--bg);color:v
 <!-- ══ TOOLBAR ══ -->
 <div class="toolbar">
   <div class="tb-brand">SMG SCREENER</div>
-  <span class="tb-version" style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);border:.5px solid var(--border2);border-radius:var(--r);padding:2px 6px;">v1.01</span>
+  <span class="tb-version" style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);border:.5px solid var(--border2);border-radius:var(--r);padding:2px 6px;">v1.00</span>
   <div class="tb-views">
     <button class="tv-btn on" id="vb-map" onclick="switchView('map')">🗺 Mapa</button>
     <button class="tv-btn" id="vb-wl" onclick="switchView('watchlist')">📋 Watchlist</button>
@@ -260,8 +260,7 @@ body{font-family:-apple-system,'DM Sans',sans-serif;background:var(--bg);color:v
     <span id="fhStatus" style="font-size:9px;font-family:'Space Mono',monospace;color:var(--muted);white-space:nowrap;"></span>
     <div class="tb-sep"></div>
     <input type="password" class="tb-input" id="ghToken" placeholder="GitHub Token…" style="width:110px;" onchange="onGhToken(this.value)" onpaste="setTimeout(()=>onGhToken(this.value),50)">
-    <input type="file" id="gh-file-input" accept=".html" style="display:none;" onchange="onFileSelected(this)">
-    <button class="tb-btn" id="gh-publish-btn" onclick="selectAndPublish()" title="Vyber soubor a publikuj na GitHub Pages">↑ Publikovat</button>
+    <button class="tb-btn" id="gh-publish-btn" onclick="publishToGitHub()" title="Publikovat aktuální verzi na GitHub Pages">↑ Publikovat</button>
     <span id="ghStatus" style="font-size:9px;font-family:'Space Mono',monospace;color:var(--muted);white-space:nowrap;"></span>
   </div>
 </div>
@@ -569,27 +568,11 @@ function onGhToken(v){
   document.getElementById('gh-publish-btn').style.color=ghToken?'var(--green)':'';
 }
 
-function selectAndPublish(){
+async function publishToGitHub(){
   if(!ghToken){
-    alert('Zadej GitHub Personal Access Token.');
+    alert('Zadej GitHub Personal Access Token do pole vedle tlačítka.\n\ngithub.com → Settings → Developer settings → Personal access tokens → Tokens (classic) → repo scope');
     return;
   }
-  document.getElementById('gh-file-input').click();
-}
-
-function onFileSelected(input){
-  const file=input.files[0];
-  if(!file)return;
-  const reader=new FileReader();
-  reader.onload=async e=>{
-    const html=e.target.result;
-    await publishToGitHub(html);
-  };
-  reader.readAsText(file);
-  input.value=''; // reset pro příští použití
-}
-
-async function publishToGitHub(html){
   const btn=document.getElementById('gh-publish-btn');
   const status=document.getElementById('ghStatus');
   btn.textContent='↑ Nahrávám…';
@@ -602,7 +585,12 @@ async function publishToGitHub(html){
     const apiBase=`https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
     const headers={'Authorization':`Bearer ${ghToken}`,'Content-Type':'application/json','Accept':'application/vnd.github+json'};
 
-    // Zakóduj soubor do base64
+    // Načti aktuální soubor ze serveru (ne DOM)
+    const srcR=await fetch(window.location.href.split('?')[0]);
+    if(!srcR.ok) throw new Error('Nepodařilo se načíst zdrojový soubor');
+    const html=await srcR.text();
+
+    // Zakóduj do base64
     const encoded=btoa(unescape(encodeURIComponent(html)));
 
     // Získej SHA existujícího souboru
@@ -614,7 +602,7 @@ async function publishToGitHub(html){
 
     // Push na GitHub
     const body={
-      message:`SMG Screener update – ${new Date().toLocaleString('cs-CZ')}`,
+      message:`SMG Screener v${document.querySelector('.tb-version')?.textContent||''} – ${new Date().toLocaleString('cs-CZ')}`,
       content:encoded,
       branch:'main',
     };
@@ -625,7 +613,7 @@ async function publishToGitHub(html){
       status.textContent='✓ Publikováno!';
       status.style.color='var(--green)';
       btn.textContent='↑ Publikovat';
-      setTimeout(()=>{status.textContent='';},5000);
+      setTimeout(()=>{status.textContent='';},4000);
     }else{
       const err=await putR.json();
       throw new Error(err.message||putR.status);
